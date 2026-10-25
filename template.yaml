@@ -8,8 +8,17 @@ Description: >
 Parameters:
   BedrockModelId:
     Type: String
-    Default: anthropic.claude-opus-5-5
-    Description: Bedrock model or inference-profile ID used for the agent's next-action choice (run `make check-bedrock`).
+    Default: anthropic.claude-haiku-5-5
+    Description: >-
+      Bedrock model ID for the agent's next-action choice (fast/cheap tier; e.g. anthropic.claude-sonnet-5-5).
+      May also be a full inference-profile ID (us./eu./apac./global.) or ARN. Run `make check-bedrock`.
+  BedrockProfile:
+    Type: String
+    Default: auto
+    AllowedValues: [auto, none, us, eu, apac, global]
+    Description: >-
+      Cross-region inference-profile prefix. auto = try the ID as given, then the region's
+      geographic profile (us./eu./apac.), then global.
   BedrockRegion:
     Type: String
     Default: ""
@@ -98,6 +107,7 @@ Resources:
           USE_BEDROCK: !Ref UseBedrock
           BEDROCK_MODEL_ID: !Ref BedrockModelId
           BEDROCK_REGION: !If [HasBedrockRegion, !Ref BedrockRegion, !Ref "AWS::Region"]
+          BEDROCK_PROFILE: !Ref BedrockProfile
           BEDROCK_TIMEOUT_S: "12"
           ALLOWED_ORIGIN: !Sub "https://${Distribution.DomainName}"
           METRICS_NAMESPACE: Unmask

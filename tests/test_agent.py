@@ -134,3 +134,40 @@ def test_guardrail_overrides_model_on_unusable_clip(fake):
     d = decide(state_for([clip("passive", usable=False, reason="no_face")]), CFG, False)
     assert d["policy"] == "guardrail" and d["action"] == "request_better_conditions"
     assert not c.calls
+
+
+def test_inference_profile_candidates():
+    from unmask.agent.bedrock import candidate_model_ids
+    m = "anthropic.claude-haiku-5-5"
+    assert candidate_model_ids(m, "us-east-1") == [m, "us." + m, "global." + m]
+    assert candidate_model_ids(m, "eu-west-1")[1] == "eu." + m
+    assert candidate_model_ids(m, "ap-southeast-2")[1] == "apac." + m
+    assert candidate_model_ids("us." + m, "eu-west-1") == ["us." + m]
+    assert candidate_model_ids(m, "us-east-1", "none") == [m]
+    assert candidate_model_ids(m, "us-east-1", "global") == ["global." + m]
+    arn = "arn:aws:bedrock:us-east-1:123:application-inference-profile/x"
+    assert candidate_model_ids(arn, "us-east-1") == [arn]
+
+
+def test_bare_id_rejected_retries_regional_profile(monkeypatch):
+    from unmask.agent.bedrock import _resolved
+
+    class C(FakeClient):
+        def converse(self, **kw):
+            self.calls.append(kw)
+            if not kw["modelId"].startswith("us."):
+                raise self.exceptions.ValidationException(
+                    "Invocation of model ID anthropic.claude-haiku-5-5 with on-demand throughput isn't supported. "
+                    "Retry with the ID or ARN of an inference profile")
+            return _tool_response("issue_challenge", {"challenge": "hand_pass", "reason": "occlusion untested"})
+    c = C()
+    monkeypatch.setattr(bedrock, "_client", c)
+    monkeypatch.setenv("BEDROCK_REGION", "us-east-1")
+    monkeypatch.delenv("BEDROCK_MODEL_ID", raising=False)
+    _resolved.clear()
+    d = decide(state_for([clip("passive", **feats("seam", 0))]), CFG, False)
+    assert d["policy"] == "bedrock" and d["model_id"] == "us.anthropic.claude-haiku-5-5"
+    n = len(c.calls)
+    decide(state_for([clip("passive", **feats("seam", 0))]), CFG, False)
+    assert len(c.calls) == n + 1  # resolved ID is cached
+    _resolved.clear()

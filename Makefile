@@ -43,8 +43,8 @@ smoke:            ## hit the deployed API with a sample clip
 check-bedrock:    ## list Claude models / inference profiles usable in REGION
 	$(PY) scripts/check_bedrock.py --region $(REGION)
 
-diagrams:         ## render Mermaid diagrams to SVG/PNG (needs npx)
-	./scripts/render_diagrams.sh
+diagrams:         ## render Mermaid diagrams to SVG/PNG (needs Chrome + internet)
+	$(PY) scripts/render_diagrams.py
 
 clean:
 	rm -rf .aws-sam eval/out .pytest_cache .local-store

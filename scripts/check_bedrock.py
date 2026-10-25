@@ -1,7 +1,7 @@
 """List Anthropic models and inference profiles available to this account in a region,
 and try one Converse tool-use call against the configured model.
 
-  python scripts/check_bedrock.py --region us-east-1 [--model anthropic.claude-opus-5-5]
+  python scripts/check_bedrock.py --region us-east-1 [--model anthropic.claude-haiku-5-5]
 """
 import argparse
 import os
@@ -13,7 +13,7 @@ import boto3
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--region", default=os.environ.get("AWS_REGION", "us-east-1"))
-    ap.add_argument("--model", default=os.environ.get("BEDROCK_MODEL_ID"))
+    ap.add_argument("--model", default=os.environ.get("BEDROCK_MODEL_ID", "anthropic.claude-haiku-5-5"))
     a = ap.parse_args()
     br = boto3.client("bedrock", region_name=a.region)
     models = br.list_foundation_models(byProvider="Anthropic")["modelSummaries"]
@@ -40,7 +40,7 @@ def main():
         state = build_state(clips, session_risk(clips, cfg), cfg, ["head_turn", "hand_pass", "light_change"])
         try:
             d = bedrock_policy(state, cfg, False)
-            print(f"\nConverse tool call OK with {a.model}: {d['action']} {d.get('challenge', '')} ({d['model_latency_ms']:.0f} ms)")
+            print(f"\nConverse tool call OK with {d['model_id']} (configured {a.model}): {d['action']} {d.get('challenge', '')} ({d['model_latency_ms']:.0f} ms)")
             print(f"  reason: {d['reason']}")
         except PolicyError as e:
             print(f"\nConverse call FAILED with {a.model}: {e}")

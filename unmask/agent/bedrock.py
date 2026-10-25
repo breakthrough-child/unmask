@@ -9,7 +9,13 @@ import time
 
 from .policy import CHALLENGE_TYPES, forced_action, rule_policy
 
-DEFAULT_MODEL_ID = "anthropic.claude-opus-5-5"
+# Fast, cheap default for a one-tool-call decision; override with BEDROCK_MODEL_ID
+# (e.g. anthropic.claude-sonnet-5-5, or a full inference-profile ID / ARN).
+DEFAULT_MODEL_ID = "anthropic.claude-haiku-5-5"
+# Cross-region inference-profile prefixes Bedrock uses in front of model IDs.
+PROFILE_PREFIXES = ("us", "eu", "apac", "global", "us-gov", "jp", "au", "ca")
+_MODEL_ID_ERRORS = ("inference profile", "on-demand throughput", "model identifier", "model id", "provided model")
+_resolved: dict[str, str] = {}
 
 SYSTEM_PROMPT = """You are the decision step of Unmask, a tool that helps a person check whether the caller on a video call is a real-time face swap.
 OpenCV has measured the caller's video. You receive per-signal suspicion scores in [0,1] (0.5 = undecided) and an uncertainty for each (1 = unknown / borderline).
@@ -64,6 +70,51 @@ def _bedrock():
     return _client
 
 
+def region_prefix(region: str) -> str | None:
+    """Geographic inference-profile prefix for a region (us-east-1 -> 'us', eu-west-1 -> 'eu', ...)."""
+    if region.startswith("us-gov-"):
+        return "us-gov"
+    for start, prefix in (("us-", "us"), ("ca-", "us"), ("eu-", "eu"), ("ap-", "apac")):
+        if region.startswith(start):
+            return prefix
+    return None
+
+
+def candidate_model_ids(model_id: str, region: str, mode: str = "auto") -> list[str]:
+    """Model IDs to try, in order.
+
+    BEDROCK_PROFILE=auto (default): the ID as given, then the regional profile
+    (us./eu./apac.), then global. =none: only as given. =us|eu|apac|global|...:
+    force that prefix. IDs that already carry a prefix, or ARNs, are used as is."""
+    if model_id.startswith("arn:") or model_id.split(".", 1)[0] in PROFILE_PREFIXES:
+        return [model_id]
+    if mode == "none":
+        return [model_id]
+    if mode in PROFILE_PREFIXES:
+        return [f"{mode}.{model_id}"]
+    out = [model_id]
+    rp = region_prefix(region)
+    if rp:
+        out.append(f"{rp}.{model_id}")
+    out.append(f"global.{model_id}")
+    return out
+
+
+def _is_model_id_error(e: Exception) -> bool:
+    return any(k in str(e).lower() for k in _MODEL_ID_ERRORS)
+
+
+def _converse(client, req: dict, effort: str | None):
+    """Converse call; drops the effort field if the model rejects it."""
+    if effort:
+        try:
+            return client.converse(**req, additionalModelRequestFields={"output_config": {"effort": effort}})
+        except client.exceptions.ValidationException as e:
+            if _is_model_id_error(e):
+                raise
+    return client.converse(**req)
+
+
 def _validate(call: dict, state: dict) -> None:
     name, args = call["name"], call["input"]
     if name == "issue_challenge":
@@ -80,26 +131,36 @@ def _validate(call: dict, state: dict) -> None:
 
 def bedrock_policy(state: dict, cfg: dict, confident: bool) -> dict:
     """Ask the model for the next action. Raises PolicyError on any problem."""
-    model_id = os.environ.get("BEDROCK_MODEL_ID", DEFAULT_MODEL_ID)
+    configured = os.environ.get("BEDROCK_MODEL_ID") or DEFAULT_MODEL_ID
+    region = os.environ.get("BEDROCK_REGION") or os.environ.get("AWS_REGION", "us-east-1")
     msg = {"role": "user", "content": [{"text": "Current session state (JSON):\n" + json.dumps(state, sort_keys=True)
                                         + f"\nScorer early-stop rule says confident={str(confident).lower()}."
                                         + "\nCall exactly one tool now."}]}
-    req = dict(modelId=model_id, system=[{"text": SYSTEM_PROMPT}], messages=[msg],
-               toolConfig={"tools": TOOLS, "toolChoice": {"auto": {}}},
-               inferenceConfig={"maxTokens": 400})
+    # toolChoice "auto": current Claude models reject forced tool choice ("any"/"tool");
+    # the prompt asks for exactly one call and _validate enforces it.
+    base = dict(system=[{"text": SYSTEM_PROMPT}], messages=[msg],
+                toolConfig={"tools": TOOLS, "toolChoice": {"auto": {}}},
+                inferenceConfig={"maxTokens": int(os.environ.get("BEDROCK_MAX_TOKENS", "2000"))})
     effort = os.environ.get("BEDROCK_EFFORT", "low")
+    candidates = [_resolved[configured]] if configured in _resolved else \
+        candidate_model_ids(configured, region, os.environ.get("BEDROCK_PROFILE", "auto"))
     t0 = time.perf_counter()
+    resp, model_id, last_err = None, None, None
     try:
         client = _bedrock()
-        try:
-            resp = client.converse(**req, **({"additionalModelRequestFields": {"output_config": {"effort": effort}}}
-                                              if effort else {}))
-        except client.exceptions.ValidationException:
-            resp = client.converse(**req)  # model/region rejects the effort field
-    except PolicyError:
-        raise
+        for mid in candidates:
+            try:
+                resp = _converse(client, dict(base, modelId=mid), effort)
+                model_id = _resolved[configured] = mid
+                break
+            except client.exceptions.ValidationException as e:
+                last_err = e
+                if not _is_model_id_error(e):
+                    raise
     except Exception as e:  # botocore errors, timeouts, missing access, no credentials
         raise PolicyError(f"{type(e).__name__}: {e}") from e
+    if resp is None:
+        raise PolicyError(f"no usable model ID among {candidates}: {last_err}")
     latency = (time.perf_counter() - t0) * 1000
     calls = [b["toolUse"] for b in resp.get("output", {}).get("message", {}).get("content", []) if "toolUse" in b]
     if len(calls) != 1:

@@ -74,8 +74,13 @@ container (3008 MB, 60 s), a private encrypted clip bucket with a 1-day lifecycl
 table with 24 h TTL, least-privilege IAM, a CloudWatch dashboard and an error alarm. Outputs
 include `FrontendUrl`, `ApiUrl` and `DashboardUrl`.
 
-Bedrock: the model ID and region are stack parameters (`BedrockModelId`, `BedrockRegion`), passed
-to the function as `BEDROCK_MODEL_ID` / `BEDROCK_REGION`. If the model is not enabled, times out or
+Bedrock: the agent only makes one small tool call per step, so the default model is the fast, cheap
+`anthropic.claude-haiku-5-5` (switch to e.g. `anthropic.claude-sonnet-5-5` with the `BedrockModelId`
+parameter). Model ID, region and inference-profile handling are stack parameters (`BedrockModelId`,
+`BedrockRegion`, `BedrockProfile`) passed to the function as `BEDROCK_MODEL_ID` / `BEDROCK_REGION` /
+`BEDROCK_PROFILE`. With `BedrockProfile=auto` the agent tries the ID as given, then the region's
+cross-region inference profile (`us.` / `eu.` / `apac.`), then `global.`, and caches whichever works;
+a full profile ID or ARN is used unchanged. If the model is not enabled, times out or
 returns an invalid action, the agent falls back to the deterministic policy, logs the reason, and
 increments the `BedrockFallbacks` metric. Set `UseBedrock=false` to run rules only.
 
