@@ -3,7 +3,7 @@
   "configurations": [
     {
       "name": "unmask-local",
-      "runtimeExecutable": "/tmp/claude-1000/-home-divine-Desktop-777-unmask/80b88fb1-df96-42f3-9354-771f1c3c1d21/scratchpad/vq/bin/python",
+      "runtimeExecutable": ".venv/bin/python",
       "runtimeArgs": ["-m", "backend.local_server", "--port", "8000"],
       "port": 8000
     }
