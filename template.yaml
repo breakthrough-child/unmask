@@ -142,6 +142,9 @@ Resources:
                 - !Sub "arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/*"
                 - !Sub "arn:aws:bedrock:*:${AWS::AccountId}:application-inference-profile/*"
       Events:
+        Warm:  # keeps one container warm: OpenCV's first load can exceed Lambda's 10 s init limit
+          Type: Schedule
+          Properties: {Schedule: rate(5 minutes), Input: '{"warmup": true}'}
         Health: {Type: HttpApi, Properties: {ApiId: !Ref Api, Method: GET, Path: /health}}
         Create: {Type: HttpApi, Properties: {ApiId: !Ref Api, Method: POST, Path: /sessions}}
         Get: {Type: HttpApi, Properties: {ApiId: !Ref Api, Method: GET, Path: "/sessions/{id}"}}

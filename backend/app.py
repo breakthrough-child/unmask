@@ -227,6 +227,8 @@ ROUTES = {
 
 
 def handler(event, context):
+    if event.get("warmup"):  # EventBridge keep-warm ping: modules are already loaded
+        return {"warm": True}
     t0 = time.perf_counter()
     method = event.get("requestContext", {}).get("http", {}).get("method", "GET")
     route = event.get("routeKey", "").split(" ", 1)[-1]

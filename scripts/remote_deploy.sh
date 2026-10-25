@@ -57,6 +57,7 @@ PY
 
 echo "== 4/4 sam deploy $STACK ($REGION)"
 sam deploy --template-file .aws-sam/remote-template.yaml --stack-name "$STACK" --region "$REGION" \
-  --resolve-s3 --capabilities CAPABILITY_IAM --no-fail-on-empty-changeset --no-confirm-changeset \
+  --resolve-s3 --image-repository "$REPO_URI" --capabilities CAPABILITY_IAM \
+  --no-fail-on-empty-changeset --no-confirm-changeset \
   --parameter-overrides "BedrockModelId=${BEDROCK_MODEL_ID:-eu.amazon.nova-lite-v1:0}"
 aws cloudformation describe-stacks --region "$REGION" --stack-name "$STACK" --query "Stacks[0].Outputs" --output table

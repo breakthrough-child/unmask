@@ -13,10 +13,22 @@
 
   // ------------------------------------------------------------------ API
   async function api(method, path, body) {
-    const r = await fetch(API + path, {
-      method, headers: body ? { "content-type": "application/json" } : {},
-      body: body ? JSON.stringify(body) : undefined,
-    });
+    // Safe calls (reads, creating a session) are retried once on a cold start / gateway timeout.
+    // Clip analysis is never retried, so a clip can't be counted twice.
+    const retryable = method === "GET" || path === "/sessions";
+    let r;
+    for (let attempt = 0; ; attempt++) {
+      try {
+        r = await fetch(API + path, {
+          method, headers: body ? { "content-type": "application/json" } : {},
+          body: body ? JSON.stringify(body) : undefined,
+        });
+        if (!retryable || attempt > 0 || ![502, 503, 504].includes(r.status)) break;
+      } catch (e) {
+        if (!retryable || attempt > 0) throw e;
+      }
+      await new Promise((res) => setTimeout(res, 1500));
+    }
     const data = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
     return data;

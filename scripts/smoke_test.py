@@ -63,7 +63,15 @@ def main():
     sample = next((s for s in manifest["samples"] if s["id"] == a.sample), manifest["samples"][0])
     print(f"API {api}\nsample {sample['id']}")
 
-    h, ms = call("GET", f"{api}/health")
+    for attempt in range(4):  # first call may hit a cold start (OpenCV image load)
+        try:
+            h, ms = call("GET", f"{api}/health")
+            break
+        except Exception as e:  # noqa: BLE001
+            print(f"health attempt {attempt + 1} failed ({type(e).__name__}); retrying")
+            time.sleep(5)
+    else:
+        raise AssertionError("health never answered")
     assert h["ok"] and h["opencv"].startswith("5"), h
     print(f"health ok: OpenCV {h['opencv']}, config {h['config']}, bedrock={h['bedrock']} ({ms:.0f} ms)")
 

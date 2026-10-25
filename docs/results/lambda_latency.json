@@ -1,0 +1,37 @@
+{
+  "api": "flqstgd5x1.execute-api",
+  "measured_at": "2026-10-25 22:54",
+  "clips": [
+    {
+      "challenge": "passive",
+      "roundtrip_ms": 4080.6,
+      "analysis_ms": 833.9,
+      "frames": 80,
+      "usable": true
+    },
+    {
+      "challenge": "light_change",
+      "roundtrip_ms": 6517.0,
+      "analysis_ms": 690.7,
+      "frames": 50,
+      "usable": true
+    },
+    {
+      "challenge": "hand_pass",
+      "roundtrip_ms": 5810.5,
+      "analysis_ms": 1999.5,
+      "frames": 50,
+      "usable": true
+    },
+    {
+      "challenge": "head_turn",
+      "roundtrip_ms": 8128.1,
+      "analysis_ms": 474.1,
+      "frames": 50,
+      "usable": true
+    }
+  ],
+  "roundtrip_ms_median": 6163.8,
+  "analysis_ms_median": 762.3,
+  "note": "roundtrip = client->API Gateway->Lambda (analysis + agent + DynamoDB) -> client; includes cold start on first clip"
+}
