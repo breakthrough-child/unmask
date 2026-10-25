@@ -1,0 +1,94 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Unmask image builder: ECR repository + CodeBuild project that clones the public
+  GitHub repo at a given commit, builds the Lambda container image (OpenCV 5 + YuNet)
+  and pushes it to ECR. Lets you deploy without local Docker or a large image upload.
+
+Parameters:
+  RepoUrl:
+    Type: String
+    Default: https://github.com/breakthrough-child/unmask.git
+
+Resources:
+  ImageRepo:
+    Type: AWS::ECR::Repository
+    Properties:
+      ImageScanningConfiguration: {ScanOnPush: true}
+      ImageTagMutability: MUTABLE
+      EncryptionConfiguration: {EncryptionType: AES256}
+      LifecyclePolicy:
+        LifecyclePolicyText: >-
+          {"rules":[{"rulePriority":1,"description":"keep last 5 images",
+          "selection":{"tagStatus":"any","countType":"imageCountMoreThan","countNumber":5},
+          "action":{"type":"expire"}}]}
+
+  BuildLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 14
+
+  BuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal: {Service: codebuild.amazonaws.com}
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: build
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action: [logs:CreateLogStream, logs:PutLogEvents]
+                Resource: !Sub "${BuildLogs.Arn}:*"
+              - Effect: Allow
+                Action: ecr:GetAuthorizationToken
+                Resource: "*"
+              - Effect: Allow
+                Action: [ecr:BatchCheckLayerAvailability, ecr:InitiateLayerUpload, ecr:UploadLayerPart,
+                         ecr:CompleteLayerUpload, ecr:PutImage, ecr:BatchGetImage, ecr:GetDownloadUrlForLayer]
+                Resource: !GetAtt ImageRepo.Arn
+
+  Builder:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Description: Build the Unmask Lambda image from GitHub and push to ECR
+      ServiceRole: !GetAtt BuildRole.Arn
+      TimeoutInMinutes: 30
+      Artifacts: {Type: NO_ARTIFACTS}
+      LogsConfig:
+        CloudWatchLogs: {Status: ENABLED, GroupName: !Ref BuildLogs}
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_MEDIUM
+        Image: aws/codebuild/amazonlinux-x86_64-standard:5.0
+        PrivilegedMode: true
+        EnvironmentVariables:
+          - {Name: REPO_URL, Value: !Ref RepoUrl}
+          - {Name: IMAGE_REPO_URI, Value: !GetAtt ImageRepo.RepositoryUri}
+          - {Name: GIT_REF, Value: main}
+      Source:
+        Type: NO_SOURCE
+        BuildSpec: |
+          version: 0.2
+          phases:
+            pre_build:
+              commands:
+                - aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "${IMAGE_REPO_URI%%/*}"
+                - git clone "$REPO_URL" /tmp/src
+                - git -C /tmp/src checkout "$GIT_REF"
+                - export TAG="$(git -C /tmp/src rev-parse --short=12 HEAD)"
+            build:
+              commands:
+                - docker buildx build --platform linux/amd64 --provenance=false --load -t "$IMAGE_REPO_URI:$TAG" /tmp/src
+            post_build:
+              commands:
+                - docker push "$IMAGE_REPO_URI:$TAG"
+                - echo "IMAGE_URI=$IMAGE_REPO_URI:$TAG"
+
+Outputs:
+  ImageRepoUri:
+    Value: !GetAtt ImageRepo.RepositoryUri
+  ProjectName:
+    Value: !Ref Builder

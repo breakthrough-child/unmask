@@ -2,8 +2,9 @@ PY ?= .venv/bin/python
 STACK ?= unmask
 REGION ?= eu-north-1
 PORT ?= 8000
+export SAM_CLI_TELEMETRY = 0
 
-.PHONY: setup test eval eval-synth samples serve build deploy deploy-frontend smoke check-bedrock diagrams clean
+.PHONY: setup test eval eval-synth samples serve build deploy remote-deploy deploy-frontend smoke check-bedrock diagrams clean
 
 setup:            ## create venv, install pinned deps, fetch + verify YuNet model
 	python3.12 -m venv .venv
@@ -33,6 +34,9 @@ build:            ## build the Lambda container image (needs Docker + SAM CLI)
 deploy: build     ## deploy the stack (first time: sam deploy --guided)
 	sam deploy --stack-name $(STACK) --region $(REGION) --resolve-image-repos --resolve-s3 \
 	  --capabilities CAPABILITY_IAM --no-fail-on-empty-changeset
+
+remote-deploy:    ## build the image in CodeBuild (no local Docker) and deploy (push first)
+	./scripts/remote_deploy.sh $(STACK) $(REGION)
 
 deploy-frontend:  ## upload frontend to S3 and invalidate CloudFront
 	./scripts/deploy_frontend.sh $(STACK) $(REGION)
