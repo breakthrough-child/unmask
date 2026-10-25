@@ -8,7 +8,7 @@ and `docs/results/results.md`; don't paste any number that isn't there._
 
 **Tagline:** An OpenCV 5 agent that catches real-time face swaps on video calls by asking the caller to move.
 
-**Links:** Live demo ⏳ PENDING (`FrontendUrl` output after `sam deploy`) · Repo https://github.com/breakthrough-child/unmask · Video ⏳ PENDING (YouTube URL)
+**Links:** Live demo https://d2xv52l4vknsio.cloudfront.net · Repo https://github.com/breakthrough-child/unmask · Video ⏳ PENDING (YouTube URL)
 
 ---
 
@@ -78,7 +78,9 @@ as a timeline and can be downloaded as JSON.
 - **OpenCV 5's new DNN engine is slower on CPU.** YuNet took 63 ms per 640×480 frame but 17 ms at
   320×240, so we detect on a downscaled copy and scale the landmarks back. With 10 fps sampling and
   optical flow at 192 px, a 5 s clip analyses in about 2–4 s on a laptop CPU (p50 1.9–3.8 s),
-  far inside API Gateway's 30 s limit. Lambda timing: ⏳ PENDING (`make smoke`).
+  far inside API Gateway's 30 s limit. On Lambda (eu-north-1) warm analysis takes 0.5–2.1 s per clip
+  and each Nova Lite decision about 1 s. The first request to a freshly deployed container image
+  timed out while OpenCV loaded, so we added a keep-warm ping and a safe client retry.
 - ⏳ PENDING: what surprised us once real recordings went through the pipeline.
 
 ## Accomplishments that we're proud of

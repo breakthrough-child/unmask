@@ -18,7 +18,7 @@ OpenCV output decides the agent's next tool call.
 
 | | |
 |---|---|
-| Live demo | ⏳ pending deployment (`FrontendUrl` stack output) |
+| Live demo | **https://d2xv52l4vknsio.cloudfront.net** (eu-north-1) |
 | Technical report | [docs/REPORT.md](docs/REPORT.md) |
 | Architecture | [docs/architecture.md](docs/architecture.md) |
 | Agent workflow | [docs/agent-workflow.md](docs/agent-workflow.md) |
@@ -68,6 +68,12 @@ sam deploy --guided                           # stack name: unmask; Region: eu-n
 make deploy-frontend STACK=unmask REGION=eu-north-1
 make smoke STACK=unmask REGION=eu-north-1      # end-to-end test against the deployed API
 ```
+
+**No Docker, or a slow connection?** `make remote-deploy` (after `git push`) deploys a small
+`unmask-build` stack (ECR repository + CodeBuild project, `build.yaml`), builds the image inside AWS
+from the pushed commit, and runs `sam deploy` with that image, so no local Docker and no large
+upload. The live demo was deployed this way. Credentials from `aws login` need `awscrt`
+(in `requirements-dev.txt`) for the Python tools.
 
 `sam deploy` creates: CloudFront + private S3 frontend bucket, API Gateway HTTP API, the Lambda
 container (3008 MB, 60 s), a private encrypted clip bucket with a 1-day lifecycle rule, a DynamoDB

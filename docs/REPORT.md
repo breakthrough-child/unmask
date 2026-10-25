@@ -7,8 +7,8 @@
 > **⏳ PENDING (real data)** and will be filled by `make eval` once the recordings described in
 > [DATA_COLLECTION.md](DATA_COLLECTION.md) exist. The only detection numbers currently available come
 > from **synthetic cartoon fixtures** (§6.2). They prove the pipeline runs end to end and **say
-> nothing about real-world detection performance**. AWS figures (Lambda latency, Bedrock decision
-> behaviour) are **⏳ PENDING (deployment)** until the stack is deployed and `make smoke` is run.
+> nothing about real-world detection performance**. AWS figures (§6.3, §7) were measured on the live
+> deployment in eu-north-1 with `make smoke` on 2026-10-25, using the synthetic sample clips.
 
 ## 1. Problem
 
@@ -194,38 +194,57 @@ agent recovered by asking for better conditions and moving on.
 
 ### 6.3 Latency
 
-| Clip (frames after 10 fps resampling) | Local p50 | Local p95 | Lambda |
+| Clip (frames after 10 fps resampling) | Local p50 | Local p95 | Lambda OpenCV analysis (3 smoke sessions) |
 |---|---|---|---|
-| passive (8 s, 80 frames) | 3.57 s | 4.46 s | ⏳ PENDING (deployment) |
-| head_turn (5 s) | 1.93 s | 2.09 s | ⏳ |
-| hand_pass (5 s) | 3.83 s | 4.21 s | ⏳ |
-| light_change (5 s) | 3.02 s | 3.25 s | ⏳ |
+| passive (8 s, 80 frames) | 3.57 s | 4.46 s | 0.88 s warm; 8.4–8.5 s on the first clip after a cold start |
+| head_turn (5 s) | 1.93 s | 2.09 s | 0.50–0.60 s |
+| hand_pass (5 s) | 3.83 s | 4.21 s | 1.93–2.09 s |
+| light_change (5 s) | 3.02 s | 3.25 s | 0.77–1.42 s |
 
 Local = Ubuntu laptop CPU (8 threads), measured by the eval harness on the synthetic clips, while
 another process was also using the CPU. All are well inside API Gateway's 30 s integration limit.
 A MediaRecorder WebM recorded in the browser (5.2 s, 15 fps) decoded and analysed correctly through
-the local API. Lambda round-trip numbers are written to `docs/results/lambda_latency.json` by
-`make smoke`.
+the local API.
+
+**Lambda (eu-north-1, 3008 MB, x86_64).** Warm OpenCV analysis is faster than on the laptop. The
+first clip after a cold start pays ~8.4 s while the container image's OpenCV layers load lazily. The
+very first invocation of a freshly deployed image exceeded Lambda's 10 s init limit and the request
+timed out at API Gateway's 30 s; an EventBridge keep-warm ping every 5 minutes and a one-time client
+retry for safe calls now cover this. Client round trips from Lagos (upload excluded, analysis + Nova
+decision + DynamoDB + network) were 6.2–13.1 s, median 10.8 s in the last smoke run
+([lambda_latency.json](results/lambda_latency.json)).
+
+**Agent on Bedrock (live).** Across the smoke sessions Amazon Nova Lite (`eu.amazon.nova-lite-v1:0`)
+made **8 decisions with 0 fallbacks**, median **1.01 s** per decision (max 1.19 s); the remaining
+steps were guardrail `conclude`s when no challenge was left. Nova consistently opened with
+`light_change` on these clips where the rule policy usually picks `head_turn`. Both are valid under
+the guardrails; whether that order helps on real swaps is ⏳ PENDING (real data, `--bedrock` replay).
 
 ### 6.4 Failure handling, observability and human control
 
 | Aspect | How it is evaluated |
 |---|---|
 | Task success | Ablation detection / FPR / inconclusive / challenges-to-verdict (§6.1–6.2) |
-| Failure handling | Unit tests: unusable clip → `request_better_conditions` with the gate's reason; 2 unusable in a row → INCONCLUSIVE; ≤ 4 challenges; Bedrock timeout / invalid tool / unavailable challenge → rule fallback; guardrail overrides the model on unusable clips; bare model ID rejected → regional inference profile retried and cached (42 tests in `tests/`) |
+| Failure handling | Unit tests: unusable clip → `request_better_conditions` with the gate's reason; 2 unusable in a row → INCONCLUSIVE; ≤ 4 challenges; Bedrock timeout / invalid tool / unavailable challenge → rule fallback; guardrail overrides the model on unusable clips; bare model ID rejected → regional inference profile retried and cached (49 tests in `tests/`, incl. mocked Nova responses) |
 | Observability | Each step's inputs, scores, action, reason, policy (bedrock / rule_fallback / guardrail / human), model ID and latency are stored in DynamoDB and downloadable as JSON. CloudWatch EMF metrics: `ClipLatencyMs`, `AnalysisLatencyMs`, `AgentLatencyMs`, `Verdicts`, `InconclusiveRate`, `BedrockFallbacks`, `Errors`, `ClipsAnalysed`; dashboard and error alarm defined in `template.yaml` |
 | Human control | Skip any challenge (`/skip`), stop any time (`/finish`), delete everything now (`DELETE /sessions/{id}`); the agent cannot end calls or contact anyone |
 
 ## 7. AWS deployment and reproducibility
 
 ```bash
-make setup && make test                     # pinned deps, YuNet checksum, 42 tests
+make setup && make test                     # pinned deps, YuNet checksum, 49 tests
 make check-bedrock REGION=eu-north-1         # which Bedrock models/profiles the account can call
 sam build && sam deploy --guided             # whole stack
 make deploy-frontend && make smoke           # upload site, end-to-end test, record Lambda latency
 ```
 
-Live endpoint: ⏳ PENDING (deployment). `make serve` runs the exact Lambda handler locally against
+No local Docker? `make remote-deploy` builds the image in CodeBuild (from the pushed GitHub commit)
+and deploys it; that is how the live stack was deployed over a slow connection.
+
+Live endpoint: **https://d2xv52l4vknsio.cloudfront.net** (API `https://flqstgd5x1.execute-api.eu-north-1.amazonaws.com`, stack
+`unmask` in eu-north-1). Verified live: S3 lifecycle rule `delete-everything-after-1-day` enabled,
+Block Public Access on, DynamoDB TTL on `expires_at` enabled, CloudWatch dashboard `unmask-unmask`
+receiving the custom metrics. `make serve` runs the exact Lambda handler locally against
 file storage, so the app can be reviewed without an AWS account.
 
 ## 8. Limitations
