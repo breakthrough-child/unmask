@@ -154,14 +154,8 @@ def seam_frame(frame: np.ndarray, fc: Face) -> dict:
     # Colour step across the seam, per angular sector, using the lower 2/3 of
     # the face (cheeks/jaw) where skin should be continuous; median is robust
     # to hair and ears.
-    yy, xx = np.mgrid[0:R.CROP, 0:R.CROP]
-    ang = np.arctan2(yy - R.CROP / 2, xx - R.CROP / 2)
-    r = R.ellipse_radius_map(float(fc.box[3] / max(fc.box[2], 1e-3)))
     steps = []
-    for a0 in np.linspace(-np.pi / 6, np.pi + np.pi / 6, 9)[:-1]:
-        sec = (ang >= a0) & (ang < a0 + np.pi * (4 / 3) / 8)
-        ia = sec & (r >= 0.74) & (r < 0.86)
-        ib = sec & (r >= 0.86) & (r < 0.98)
+    for ia, ib in R.sector_pairs(fc.box):
         if ia.sum() > 5 and ib.sum() > 5:
             steps.append(float(np.linalg.norm(lab[ia].mean(0) - lab[ib].mean(0))))
     return {"edge": float(edge), "color_step": float(np.median(steps)) if steps else 0.0,
@@ -199,7 +193,7 @@ def seam_features(frames, faces) -> tuple[dict, list[float | None]]:
 def motion_masks(frames: list[np.ndarray]) -> list[np.ndarray]:
     """Moving-pixel masks from Farneback optical flow combined with MOG2
     background subtraction. masks[i] describes motion into frame i."""
-    small_w = 320
+    small_w = 192  # occlusion fractions don't need fine flow; keeps a 5 s clip ~1 s
     bg = cv2.createBackgroundSubtractorMOG2(history=50, varThreshold=25, detectShadows=False)
     out = [np.zeros(frames[0].shape[:2], bool)] if frames else []
     prev = None
@@ -208,9 +202,9 @@ def motion_masks(frames: list[np.ndarray]) -> list[np.ndarray]:
         g = cv2.cvtColor(cv2.resize(f, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA), cv2.COLOR_BGR2GRAY)
         fg = bg.apply(g, learningRate=-1)
         if prev is not None:
-            flow = cv2.calcOpticalFlowFarneback(prev, g, None, 0.5, 3, 15, 3, 5, 1.2, 0)
+            flow = cv2.calcOpticalFlowFarneback(prev, g, None, 0.5, 2, 11, 2, 5, 1.1, 0)
             mag = cv2.magnitude(flow[..., 0], flow[..., 1])
-            thr = max(1.0, 3.0 * float(np.median(mag)))
+            thr = max(0.6, 3.0 * float(np.median(mag)))
             m = (mag > thr) | ((fg > 0) & (mag > 0.5 * thr))
             m = cv2.morphologyEx(m.astype(np.uint8), cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
             out.append(cv2.resize(m, (f.shape[1], f.shape[0]), interpolation=cv2.INTER_NEAREST).astype(bool))

@@ -1,0 +1,19 @@
+flowchart TD
+  Start(["User: check this caller"]) --> P["Record passive scan (10 s)"]
+  P --> V["OpenCV 5 analysis<br/>YuNet · solvePnP · seam · texture ·<br/>optical flow · lighting · quality gates"]
+  V --> S["Deterministic scorer<br/>per-signal score + uncertainty → risk"]
+  S --> G{"Guardrails"}
+  G -- "clip unusable" --> RB["request_better_conditions(reason)<br/>specific instruction"]
+  G -- "2 unusable in a row / 3 total" --> C
+  G -- "4 challenges done / none left" --> C
+  G -- "otherwise" --> M["Bedrock Converse (tool use)<br/>input: scores, uncertainty, history"]
+  M -- "valid tool call" --> D{"Action"}
+  M -- "error / timeout / invalid" --> R["Rule policy fallback<br/>(same logic, logged metric)"]
+  R --> D
+  D -- "issue_challenge(head_turn | hand_pass | light_change)" --> CH["User relays challenge to caller<br/>record 5 s response clip"]
+  D -- "conclude()" --> C
+  CH --> V
+  RB --> RR["User fixes conditions<br/>re-record or skip"] --> V
+  C["Verdict from the scorer only<br/>LOW_RISK / SUSPICIOUS /<br/>HIGH_RISK / INCONCLUSIVE<br/>+ evidence, reasons, advice"]
+  U(["User can skip a challenge<br/>or stop at any time"]) -.-> C
+  V -. "every step: inputs, scores, action, reason,<br/>model or fallback, latency" .-> T[("DynamoDB trace")]

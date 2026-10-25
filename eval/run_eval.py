@@ -34,6 +34,7 @@ from unmask.agent.session import replay  # noqa: E402
 from unmask.scoring import load_config, session_risk  # noqa: E402
 from unmask.scoring.tune import fit_config  # noqa: E402
 from unmask.vision import analyze_clip  # noqa: E402
+from unmask.vision.analyze import ANALYSIS_VERSION  # noqa: E402
 
 CHALLENGES = ("head_turn", "hand_pass", "light_change")
 FIXED = ["head_turn", "hand_pass", "light_change"]
@@ -55,7 +56,7 @@ def analyse_all(rows, cache_dir: Path, ev_dir: Path, detector_factory=None):
     out = []
     for i, r in enumerate(rows):
         st = os.stat(r["abspath"])
-        key = hashlib.sha1(f"{r['abspath']}|{st.st_size}|{st.st_mtime}|{r['challenge']}".encode()).hexdigest()[:16]
+        key = hashlib.sha1(f"{ANALYSIS_VERSION}|{r['abspath']}|{st.st_size}|{st.st_mtime}|{r['challenge']}".encode()).hexdigest()[:16]
         cp = cache_dir / f"{key}.json"
         if cp.exists():
             res = json.loads(cp.read_text())
@@ -190,9 +191,8 @@ def main():
     lam = ROOT / "docs" / "results" / "lambda_latency.json"
     metrics["latency_lambda"] = json.loads(lam.read_text()) if lam.exists() else None
     metrics["unusable_reasons"] = dict(Counter(c["reason"] for c in clips if not c["usable"]))
-    orders = Counter(tuple(r["strategies"]["agent"]["result"]["challenges_done"] and
-                           [st["decision"].get("challenge") for st in r["strategies"]["agent"]["trace"]
-                            if st["decision"]["action"] == "issue_challenge"]) for r in results)
+    orders = Counter(tuple(st["decision"]["challenge"] for st in r["strategies"]["agent"]["trace"]
+                           if st["decision"]["action"] == "issue_challenge") for r in results)
     metrics["agent_orders"] = {" > ".join(k) if k else "(none)": v for k, v in orders.most_common()}
     policies = Counter(st["decision"].get("policy") for r in results for st in r["strategies"]["agent"]["trace"])
     metrics["agent_policies"] = dict(policies)

@@ -15,6 +15,9 @@ MODEL_SHA256 = "8f2383e4dd3cfbb4553ea8718107fc0423210dc964f9f4280604804ed2552fa4
 # frames below FACE_MIN_SCORE are treated as "no face" downstream.
 DETECT_THRESHOLD = 0.3
 FACE_MIN_SCORE = 0.6
+# OpenCV 5's new DNN graph engine runs YuNet ~4x slower at 640x480 than at 320x240
+# on CPU, so detection runs on a downscaled copy and coordinates are scaled back.
+DETECT_WIDTH = int(os.environ.get("UNMASK_DETECT_WIDTH", "320"))
 
 # YuNet landmark order (image coordinates): right eye, left eye, nose tip,
 # right mouth corner, left mouth corner ("right" = the subject's right).
@@ -63,6 +66,10 @@ class FaceDetector:
         self._size = (320, 320)
 
     def detect(self, frame: np.ndarray) -> list[Face]:
+        scale = 1.0
+        if DETECT_WIDTH and frame.shape[1] > DETECT_WIDTH:
+            scale = frame.shape[1] / DETECT_WIDTH
+            frame = cv2.resize(frame, (DETECT_WIDTH, int(round(frame.shape[0] / scale))), interpolation=cv2.INTER_AREA)
         h, w = frame.shape[:2]
         if (w, h) != self._size:
             self._det.setInputSize((w, h))
@@ -72,8 +79,8 @@ class FaceDetector:
             return []
         faces = []
         for row in out:
-            faces.append(Face(box=row[0:4].astype(float),
-                              landmarks=row[4:14].reshape(5, 2).astype(float),
+            faces.append(Face(box=row[0:4].astype(float) * scale,
+                              landmarks=row[4:14].reshape(5, 2).astype(float) * scale,
                               score=float(row[14])))
         return faces
 

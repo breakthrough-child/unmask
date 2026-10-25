@@ -12,6 +12,8 @@ from .quality import INSTRUCTIONS, gate
 from .video import Clip, load_clip
 
 CHALLENGES = ("passive", "head_turn", "hand_pass", "light_change")
+# Bump when signal code changes so cached eval features are recomputed.
+ANALYSIS_VERSION = "2026.10.25-2"
 
 _detector: FaceDetector | None = None
 
@@ -41,7 +43,7 @@ def analyze_clip(source: str | Clip, challenge: str = "passive", with_evidence: 
     t_load = time.perf_counter()
     result: dict = {"challenge": challenge, "usable": False, "reason": None, "instruction": None,
                     "features": {}, "series": {}, "quality": {}, "evidence": [],
-                    "opencv_version": cv2.__version__}
+                    "opencv_version": cv2.__version__, "analysis_version": ANALYSIS_VERSION}
     if len(clip.frames) < 2:
         result.update(reason="too_few_frames", instruction=INSTRUCTIONS["too_few_frames"],
                       quality={"frames": len(clip.frames)})

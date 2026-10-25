@@ -68,7 +68,10 @@ def load_clip(path: str, max_width: int = MAX_WIDTH, target_fps: float = TARGET_
             size = (frame.shape[1], frame.shape[0])
             frames.append(_downscale(frame, max_width))
             times.append(t)
-            next_t = t + 1.0 / target_fps
+            # advance on a fixed grid so a 15 fps source averages 10 fps, not 7.5
+            next_t += 1.0 / target_fps
+            while next_t <= t:
+                next_t += 1.0 / target_fps
     cap.release()
     if times:
         t0 = times[0]

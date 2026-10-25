@@ -78,7 +78,7 @@ def session_risk(clips: list[dict], cfg: dict | None = None) -> dict:
     cfg = cfg or load_config()
     sigs = score_signals(clips, cfg)
     usable = [c for c in clips if c.get("usable")]
-    challenges_done = sorted({c["challenge"] for c in usable if c["challenge"] != "passive"})
+    challenges_done = list(dict.fromkeys(c["challenge"] for c in usable if c["challenge"] != "passive"))
     num = den = 0.0
     for name, s in sigs.items():
         if s["score"] is None:
@@ -118,11 +118,20 @@ def is_confident(risk: dict, cfg: dict) -> bool:
     st = cfg["stop"]
     if r is None:
         return False
-    if r >= st["high_confidence"] and n >= st["min_challenges_high"]:
-        return True
+    measured = {k: s for k, s in risk["signals"].items() if s["score"] is not None}
+    challenge_sigs = {k: s for k, s in measured.items() if cfg["signals"][k].get("challenge")}
+    if n >= st["min_challenges_high"]:
+        if r >= st["high_confidence"]:
+            return True
+        # one decisive, well-covered challenge signal is enough to stop (a swap that
+        # visibly breaks under a hand pass doesn't need a lighting test as well)
+        if any(s["score"] >= st.get("single_signal_confident", 1.1) and s["coverage"] >= 0.5
+               for s in challenge_sigs.values()):
+            return True
     if r <= st["low_confidence"] and n >= st["min_challenges_low"]:
-        unc = [s["uncertainty"] for s in risk["signals"].values() if s["score"] is not None]
-        return max(unc, default=1.0) <= st["max_uncertainty_low"]
+        if any(s["score"] > st.get("max_challenge_score_low", 1.0) for s in challenge_sigs.values()):
+            return False
+        return max((s["uncertainty"] for s in challenge_sigs.values()), default=1.0) <= st["max_uncertainty_low"]
     return False
 
 

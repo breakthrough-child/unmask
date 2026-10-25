@@ -231,8 +231,8 @@
           finally { box.querySelectorAll("button").forEach((x) => (x.disabled = false)); }
         };
         box.appendChild(b);
-        if (sm.note) { const n = document.createElement("span"); n.className = "muted"; n.textContent = sm.note; box.appendChild(n); }
       }
+      if (m.note) { const n = document.createElement("span"); n.className = "muted"; n.textContent = m.note; box.appendChild(n); }
     } catch { box.innerHTML = '<span class="muted">No samples available.</span>'; }
   }
   loadSamples();

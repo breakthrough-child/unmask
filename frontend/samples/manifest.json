@@ -1,0 +1,27 @@
+{
+  "samples": [
+    {
+      "id": "synthetic-real",
+      "title": "Synthetic caller: real",
+      "clips": {
+        "passive": "samples/synthetic-real_passive.mp4",
+        "head_turn": "samples/synthetic-real_head_turn.mp4",
+        "hand_pass": "samples/synthetic-real_hand_pass.mp4",
+        "light_change": "samples/synthetic-real_light_change.mp4"
+      },
+      "description": "Procedurally drawn cartoon (no real person). Pipeline demo only."
+    },
+    {
+      "id": "synthetic-swap",
+      "title": "Synthetic caller: swap-like",
+      "clips": {
+        "passive": "samples/synthetic-swap_passive.mp4",
+        "head_turn": "samples/synthetic-swap_head_turn.mp4",
+        "hand_pass": "samples/synthetic-swap_hand_pass.mp4",
+        "light_change": "samples/synthetic-swap_light_change.mp4"
+      },
+      "description": "Procedurally drawn cartoon (no real person). Pipeline demo only."
+    }
+  ],
+  "note": "Synthetic cartoons until consented real samples are added."
+}

@@ -40,6 +40,26 @@ def ellipse_radius_map(box_aspect: float, size: int = CROP) -> np.ndarray:
     return _ring_cache[key]
 
 
+_sector_cache: dict = {}
+
+
+def sector_pairs(box: np.ndarray, size: int = CROP) -> list[tuple[np.ndarray, np.ndarray]]:
+    """Pairs of (just-inside, just-outside) seam masks for 8 angular sectors covering
+    the cheeks and jaw (lower ~2/3 of the face), where skin should be continuous."""
+    aspect = round(float(box[3] / max(box[2], 1e-3)), 2)
+    key = (aspect, size)
+    if key not in _sector_cache:
+        r = ellipse_radius_map(aspect, size)
+        yy, xx = np.mgrid[0:size, 0:size]
+        ang = np.arctan2(yy - size / 2, xx - size / 2)
+        pairs = []
+        for a0 in np.linspace(-np.pi / 6, np.pi + np.pi / 6, 9)[:-1]:
+            sec = (ang >= a0) & (ang < a0 + np.pi * (4 / 3) / 8)
+            pairs.append((sec & (r >= 0.74) & (r < 0.86), sec & (r >= 0.86) & (r < 0.98)))
+        _sector_cache[key] = pairs
+    return _sector_cache[key]
+
+
 def ring_mask(box: np.ndarray, rng: tuple[float, float], size: int = CROP) -> np.ndarray:
     aspect = float(box[3] / max(box[2], 1e-3))  # h / w
     r = ellipse_radius_map(aspect, size)

@@ -4,7 +4,7 @@
 
 ```mermaid
 flowchart TD
-  Start(["User: Check this caller"]) --> P["Record passive scan (10 s)"]
+  Start(["User: check this caller"]) --> P["Record passive scan (10 s)"]
   P --> V["OpenCV 5 analysis<br/>YuNet · solvePnP · seam · texture ·<br/>optical flow · lighting · quality gates"]
   V --> S["Deterministic scorer<br/>per-signal score + uncertainty → risk"]
   S --> G{"Guardrails"}
@@ -19,7 +19,7 @@ flowchart TD
   D -- "conclude()" --> C
   CH --> V
   RB --> RR["User fixes conditions<br/>re-record or skip"] --> V
-  C(["Verdict from scorer only:<br/>LOW_RISK · SUSPICIOUS · HIGH_RISK · INCONCLUSIVE<br/>+ evidence frames, top reasons, advice"])
+  C["Verdict from the scorer only<br/>LOW_RISK / SUSPICIOUS /<br/>HIGH_RISK / INCONCLUSIVE<br/>+ evidence, reasons, advice"]
   U(["User can skip a challenge<br/>or stop at any time"]) -.-> C
   V -. "every step: inputs, scores, action, reason,<br/>model or fallback, latency" .-> T[("DynamoDB trace")]
 ```

@@ -1,0 +1,27 @@
+flowchart LR
+  subgraph Browser["User's browser (Chrome / Edge)"]
+    Call["Video call window<br/>(WhatsApp Web, Meet, Zoom)"]
+    UI["Unmask web app<br/>getDisplayMedia → canvas crop → MediaRecorder"]
+    Call -- "window share" --> UI
+  end
+
+  subgraph AWS["AWS (one SAM stack)"]
+    CF["CloudFront<br/>(HTTPS, security headers)"]
+    FE[("S3 frontend bucket<br/>private, OAC")]
+    APIGW["API Gateway HTTP API<br/>CORS, throttling 10 rps"]
+    L["Lambda container (3008 MB, x86_64)<br/>OpenCV 5.0 headless + YuNet<br/>vision → scorer → agent"]
+    S3[("S3 clip bucket<br/>private · SSE · TLS-only<br/>lifecycle: delete after 1 day")]
+    DDB[("DynamoDB sessions + traces<br/>on-demand · TTL 24 h")]
+    BR["Amazon Bedrock<br/>Converse API + tool use (Claude)"]
+    CW["CloudWatch<br/>JSON logs · EMF metrics<br/>dashboard · alarm"]
+  end
+
+  UI -- "static files" --> CF --> FE
+  UI -- "1. POST /sessions<br/>2. POST /upload-url" --> APIGW
+  UI -- "3. pre-signed POST (clip)" --> S3
+  UI -- "4. POST /clips" --> APIGW --> L
+  L -- "download clip, put evidence JPEGs" --> S3
+  L -- "session state + decision trace" --> DDB
+  L -- "next action (tool call)" --> BR
+  L -- "logs + metrics" --> CW
+  UI -. "evidence frames (pre-signed GET)" .-> S3
