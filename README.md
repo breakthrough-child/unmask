@@ -59,14 +59,14 @@ Analyse clips from the command line:
 ## Deploy to AWS
 
 Prerequisites: AWS CLI v2 with credentials, [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html),
-Docker (to build the Lambda container image), and access to a Claude model in Amazon Bedrock.
+Docker (to build the Lambda container image), and access to Amazon Nova Lite in Amazon Bedrock.
 
 ```bash
-make check-bedrock REGION=us-east-1          # which Claude models / inference profiles you can call
+make check-bedrock REGION=eu-north-1          # which Nova/Claude models and inference profiles you can call
 sam build
-sam deploy --guided                           # stack name: unmask; set BedrockModelId if needed
-make deploy-frontend STACK=unmask REGION=us-east-1
-make smoke STACK=unmask REGION=us-east-1      # end-to-end test against the deployed API
+sam deploy --guided                           # stack name: unmask; Region: eu-north-1 (your project Region)
+make deploy-frontend STACK=unmask REGION=eu-north-1
+make smoke STACK=unmask REGION=eu-north-1      # end-to-end test against the deployed API
 ```
 
 `sam deploy` creates: CloudFront + private S3 frontend bucket, API Gateway HTTP API, the Lambda
@@ -75,12 +75,14 @@ table with 24 h TTL, least-privilege IAM, a CloudWatch dashboard and an error al
 include `FrontendUrl`, `ApiUrl` and `DashboardUrl`.
 
 Bedrock: the agent only makes one small tool call per step, so the default model is the fast, cheap
-`anthropic.claude-haiku-5-5` (switch to e.g. `anthropic.claude-sonnet-5-5` with the `BedrockModelId`
-parameter). Model ID, region and inference-profile handling are stack parameters (`BedrockModelId`,
-`BedrockRegion`, `BedrockProfile`) passed to the function as `BEDROCK_MODEL_ID` / `BEDROCK_REGION` /
-`BEDROCK_PROFILE`. With `BedrockProfile=auto` the agent tries the ID as given, then the region's
-cross-region inference profile (`us.` / `eu.` / `apac.`), then `global.`, and caches whichever works;
-a full profile ID or ARN is used unchanged. If the model is not enabled, times out or
+**Amazon Nova Lite** through the EU cross-region inference profile, `eu.amazon.nova-lite-v1:0`, used
+exactly as given (your project Region is eu-north-1). Change it with the `BedrockModelId` parameter
+(e.g. `eu.amazon.nova-pro-v1:0`). Model ID, region and inference-profile handling are stack
+parameters (`BedrockModelId`, `BedrockRegion`, `BedrockProfile`) passed to the function as
+`BEDROCK_MODEL_ID` / `BEDROCK_REGION` / `BEDROCK_PROFILE`. An ID that already carries a profile
+prefix (`eu.`, `us.`, `apac.`, `global.`) or an ARN is used unchanged; for a bare ID,
+`BedrockProfile=auto` tries it as given, then the region's profile, then `global.`. The request is
+shaped per model family (Nova: greedy decoding, no `additionalProperties` in tool schemas). If the model is not enabled, times out or
 returns an invalid action, the agent falls back to the deterministic policy, logs the reason, and
 increments the `BedrockFallbacks` metric. Set `UseBedrock=false` to run rules only.
 

@@ -12,7 +12,7 @@ flowchart LR
     L["Lambda container (3008 MB, x86_64)<br/>OpenCV 5.0 headless + YuNet<br/>vision → scorer → agent"]
     S3[("S3 clip bucket<br/>private · SSE · TLS-only<br/>lifecycle: delete after 1 day")]
     DDB[("DynamoDB sessions + traces<br/>on-demand · TTL 24 h")]
-    BR["Amazon Bedrock<br/>Converse API + tool use (Claude)"]
+    BR["Amazon Bedrock<br/>Converse API + tool use (Nova Lite)"]
     CW["CloudWatch<br/>JSON logs · EMF metrics<br/>dashboard · alarm"]
   end
 

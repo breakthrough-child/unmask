@@ -42,7 +42,8 @@ mermaid.initialize({{startOnLoad:false, theme:"default", fontFamily:"Arial, Helv
 const {{svg}} = await mermaid.render("d", {json.dumps(src)});
 document.getElementById("out").innerHTML = svg;
 </script></body></html>""")
-    dom = subprocess.run([chrome, "--headless=new", "--disable-gpu", "--no-sandbox", "--virtual-time-budget=15000",
+    prof = f"--user-data-dir={tmp / 'chrome-profile'}"  # never attach to the user's running Chrome
+    dom = subprocess.run([chrome, "--headless=new", prof, "--disable-gpu", "--no-sandbox", "--virtual-time-budget=15000",
                           "--dump-dom", page.as_uri()], capture_output=True, text=True, timeout=120).stdout
     svg = re.sub(r"<br\s*>", "<br/>", re.search(r"(<svg[\s\S]*?</svg>)\s*</div>", dom).group(1))
     x, y, w, h = [float(v) for v in re.search(r'viewBox="([^"]+)"', svg).group(1).split()]
@@ -53,7 +54,7 @@ document.getElementById("out").innerHTML = svg;
     (out / f"{name}.svg").write_text(svg)
     shot = tmp / f"{name}.html"
     shot.write_text('<html><body style="margin:0;background:#fff">' + svg.replace(f"max-width: {w:.1f}px;", "") + "</body></html>")
-    subprocess.run([chrome, "--headless=new", "--disable-gpu", "--no-sandbox", "--hide-scrollbars",
+    subprocess.run([chrome, "--headless=new", prof, "--disable-gpu", "--no-sandbox", "--hide-scrollbars",
                     "--force-device-scale-factor=2", f"--window-size={int(w)},{int(h)}",
                     f"--screenshot={out / (name + '.png')}", shot.as_uri()], capture_output=True, timeout=120)
     print(f"wrote docs/diagrams/{name}.svg and .png")

@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from unmask.agent import bedrock
@@ -163,7 +165,7 @@ def test_bare_id_rejected_retries_regional_profile(monkeypatch):
     c = C()
     monkeypatch.setattr(bedrock, "_client", c)
     monkeypatch.setenv("BEDROCK_REGION", "us-east-1")
-    monkeypatch.delenv("BEDROCK_MODEL_ID", raising=False)
+    monkeypatch.setenv("BEDROCK_MODEL_ID", "anthropic.claude-haiku-5-5")
     _resolved.clear()
     d = decide(state_for([clip("passive", **feats("seam", 0))]), CFG, False)
     assert d["policy"] == "bedrock" and d["model_id"] == "us.anthropic.claude-haiku-5-5"
@@ -171,3 +173,78 @@ def test_bare_id_rejected_retries_regional_profile(monkeypatch):
     decide(state_for([clip("passive", **feats("seam", 0))]), CFG, False)
     assert len(c.calls) == n + 1  # resolved ID is cached
     _resolved.clear()
+
+
+# ---------------------------------------------------------------- Amazon Nova (default model)
+NOVA = "eu.amazon.nova-lite-v1:0"
+
+
+def _nova_response(*blocks, stop="tool_use"):
+    return {"output": {"message": {"role": "assistant", "content": list(blocks)}}, "stopReason": stop,
+            "usage": {"inputTokens": 900, "outputTokens": 60, "totalTokens": 960}}
+
+
+@pytest.fixture
+def nova(monkeypatch):
+    from unmask.agent.bedrock import _resolved
+    _resolved.clear()
+    monkeypatch.delenv("BEDROCK_MODEL_ID", raising=False)  # default must be Nova Lite
+    monkeypatch.setenv("BEDROCK_REGION", "eu-north-1")
+    yield
+    _resolved.clear()
+
+
+def test_default_model_is_nova_lite_used_exactly(fake, nova):
+    from unmask.agent.bedrock import DEFAULT_MODEL_ID
+    assert DEFAULT_MODEL_ID == NOVA
+    c = fake(response=_nova_response(
+        {"text": "<thinking>texture is borderline, occlusion untested</thinking>"},
+        {"toolUse": {"toolUseId": "t1", "name": "issue_challenge",
+                     "input": {"challenge": "hand_pass", "reason": "Texture 0.55 is borderline and occlusion is untested."}}}))
+    d = decide(state_for([clip("passive", **feats("seam", 0))]), CFG, False)
+    assert d["policy"] == "bedrock" and d["challenge"] == "hand_pass" and d["model_id"] == NOVA
+    req = c.calls[0]
+    assert req["modelId"] == NOVA                          # no prefix added or stripped
+    assert req["toolConfig"]["toolChoice"] == {"auto": {}}
+    assert req["inferenceConfig"]["temperature"] == 0.0    # greedy decoding for tool use
+    assert req["additionalModelRequestFields"] == {"inferenceConfig": {"topK": 1}}
+    for t in req["toolConfig"]["tools"]:
+        assert "additionalProperties" not in t["toolSpec"]["inputSchema"]["json"]
+        assert t["toolSpec"]["inputSchema"]["json"]["required"]
+    assert "output_config" not in json.dumps(req)        # Claude-only field never sent to Nova
+
+
+def test_nova_rejecting_extras_retries_plain(nova, monkeypatch):
+    class C(FakeClient):
+        def converse(self, **kw):
+            self.calls.append(kw)
+            if "additionalModelRequestFields" in kw:
+                raise self.exceptions.ValidationException("Malformed input request: extraneous key [topK]")
+            return _nova_response({"toolUse": {"toolUseId": "t", "name": "conclude",
+                                               "input": {"reason": "Risk 0.82 is decisive after the hand pass."}}})
+    c = C()
+    monkeypatch.setattr(bedrock, "_client", c)
+    d = decide(state_for([clip("passive", **feats("seam", 0))]), CFG, True)
+    assert d["policy"] == "bedrock" and d["action"] == "conclude"
+    assert len(c.calls) == 2 and "additionalModelRequestFields" not in c.calls[1]
+
+
+def test_nova_string_input_and_case_are_normalised(fake, nova):
+    fake(response=_nova_response({"toolUse": {"toolUseId": "t", "name": "issue_challenge",
+                                              "input": json.dumps({"challenge": "Light_Change",
+                                                                   "reason": "Lighting is unmeasured."})}}))
+    d = decide(state_for([clip("passive", **feats("seam", 0))]), CFG, False)
+    assert d["policy"] == "bedrock" and d["challenge"] == "light_change"
+
+
+@pytest.mark.parametrize("blocks", [
+    [{"text": "I would ask for a head turn."}],                                          # no tool call
+    [{"toolUse": {"toolUseId": "t", "name": "issue_challenge", "input": {"challenge": "head_turn"}}}],  # no reason
+    [{"toolUse": {"toolUseId": "t", "name": "end_call", "input": {"reason": "x"}}}],     # unknown tool
+    [{"toolUse": {"toolUseId": "a", "name": "conclude", "input": {"reason": "x"}}},
+     {"toolUse": {"toolUseId": "b", "name": "conclude", "input": {"reason": "y"}}}],      # two calls
+])
+def test_nova_bad_output_falls_back_to_rules(fake, nova, blocks):
+    fake(response=_nova_response(*blocks, stop="end_turn"))
+    d = decide(state_for([clip("passive", **feats("seam", 0))]), CFG, False)
+    assert d["policy"] == "rule_fallback" and d["action"] == "issue_challenge" and d["fallback_reason"]

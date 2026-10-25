@@ -26,7 +26,7 @@ do next, and that is honest when it can't tell.
 Unmask runs in a browser tab next to your call. You share the call window with it, and it:
 
 1. records a 10-second **passive scan** of the caller and measures their face with OpenCV 5;
-2. lets an **agent** (Claude on Amazon Bedrock, via tool use) pick the physical challenge that
+2. lets an **agent** (Amazon Nova Lite on Amazon Bedrock, via Converse tool use) pick the physical challenge that
    best resolves what the measurements are unsure about: *turn your head fully left*, *pass a hand
    slowly across your face*, or *move closer to a light*. It shows the challenge as a large prompt
    for you to read out, with a one-sentence reason;
@@ -110,6 +110,6 @@ as a timeline and can be downloaded as JSON.
 
 ## Built with
 
-`opencv` `opencv-5` `yunet` `python` `numpy` `aws-lambda` `amazon-bedrock` `claude` `amazon-api-gateway`
+`opencv` `opencv-5` `yunet` `python` `numpy` `aws-lambda` `amazon-bedrock` `amazon-nova` `amazon-api-gateway`
 `amazon-s3` `amazon-cloudfront` `amazon-dynamodb` `amazon-cloudwatch` `aws-sam` `docker` `javascript`
 `webrtc` `mediarecorder` `matplotlib` `pytest`

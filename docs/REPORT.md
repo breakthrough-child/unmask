@@ -53,7 +53,7 @@ Details: [architecture.md](architecture.md). In short:
 | Analysis + agent | Lambda **container image** (3008 MB, 60 s) | OpenCV 5.0 headless + YuNet baked in; the Docker build fails if `cv2.__version__` isn't 5.x or the model checksum differs |
 | Clips + evidence | S3 (private, SSE, TLS-only, Block Public Access) | Pre-signed POST (10 min, ≤ 60 MB, content type locked); **lifecycle rule deletes everything after 1 day** |
 | Sessions + traces | DynamoDB on-demand | Optimistic locking; **TTL 24 h** |
-| Agent model | Amazon Bedrock, Converse API with tool use | Default `anthropic.claude-haiku-5-5`, configurable; inference-profile fallback |
+| Agent model | Amazon Bedrock, Converse API with tool use | Default Amazon Nova Lite (`eu.amazon.nova-lite-v1:0`), configurable |
 | Observability | CloudWatch Logs (JSON) + EMF custom metrics + dashboard + alarm | Clip latency, verdicts, inconclusive rate, errors, Bedrock fallbacks |
 | IaC | AWS SAM (`template.yaml`) | Least-privilege role, no secrets in code |
 
@@ -122,10 +122,12 @@ rule policy, which is logged with the reason and counted in the `BedrockFallback
 reasons and advice are computed by `unmask/scoring` from a versioned JSON config.
 
 **Model choice.** The decision is a single small tool call per step, so the default is the fast,
-cheap **Claude Haiku 5.5** (`anthropic.claude-haiku-5-5`), switchable to Sonnet with one stack
-parameter. With `BedrockProfile=auto` the agent tries the ID as given, then the region's
-cross-region inference profile (`us.`/`eu.`/`apac.`), then `global.`, and caches whichever works.
-`toolChoice` is `auto` because current Claude models reject forced tool choice.
+cheap **Amazon Nova Lite** via the EU cross-region inference profile (`eu.amazon.nova-lite-v1:0`,
+used exactly as given; the stack runs in eu-north-1). It's switchable with one stack parameter. Requests
+are shaped per model family: for Nova, greedy decoding (temperature 0, top-k 1) and tool schemas
+without `additionalProperties`; Claude IDs still work. Tool calls are normalised (JSON-string input,
+enum case) before validation, so a malformed answer becomes a logged fallback, not an error.
+`toolChoice` is `auto`; the prompt asks for exactly one call and the validator enforces it.
 
 **Proof that vision output changes decisions.** [AGENT_TRACE_EXAMPLE.json](AGENT_TRACE_EXAMPLE.json)
 is an exported trace (currently from a **synthetic** session, provenance recorded in the file):
@@ -218,7 +220,7 @@ the local API. Lambda round-trip numbers are written to `docs/results/lambda_lat
 
 ```bash
 make setup && make test                     # pinned deps, YuNet checksum, 42 tests
-make check-bedrock REGION=us-east-1          # which Claude models/profiles the account can call
+make check-bedrock REGION=eu-north-1         # which Bedrock models/profiles the account can call
 sam build && sam deploy --guided             # whole stack
 make deploy-frontend && make smoke           # upload site, end-to-end test, record Lambda latency
 ```

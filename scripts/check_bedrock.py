@@ -1,7 +1,7 @@
-"""List Anthropic models and inference profiles available to this account in a region,
+"""List Amazon Nova / Anthropic models and inference profiles available to this account in a region,
 and try one Converse tool-use call against the configured model.
 
-  python scripts/check_bedrock.py --region us-east-1 [--model anthropic.claude-haiku-5-5]
+  python scripts/check_bedrock.py --region eu-north-1 [--model eu.amazon.nova-lite-v1:0]
 """
 import argparse
 import os
@@ -12,19 +12,21 @@ import boto3
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--region", default=os.environ.get("AWS_REGION", "us-east-1"))
-    ap.add_argument("--model", default=os.environ.get("BEDROCK_MODEL_ID", "anthropic.claude-haiku-5-5"))
+    ap.add_argument("--region", default=os.environ.get("AWS_REGION", "eu-north-1"))
+    ap.add_argument("--model", default=os.environ.get("BEDROCK_MODEL_ID", "eu.amazon.nova-lite-v1:0"))
     a = ap.parse_args()
     br = boto3.client("bedrock", region_name=a.region)
-    models = br.list_foundation_models(byProvider="Anthropic")["modelSummaries"]
-    print(f"Anthropic foundation models in {a.region}:")
+    models = [m for prov in ("Amazon", "Anthropic")
+              for m in br.list_foundation_models(byProvider=prov)["modelSummaries"]
+              if "nova" in m["modelId"] or "anthropic" in m["modelId"]]
+    print(f"Nova / Anthropic foundation models in {a.region}:")
     for m in sorted(models, key=lambda m: m["modelId"]):
         print(f"  {m['modelId']:<55} {','.join(m.get('inferenceTypesSupported', []))}")
     try:
         profiles = br.list_inference_profiles()["inferenceProfileSummaries"]
         print("Inference profiles (use these IDs when the model needs cross-region inference):")
         for p in profiles:
-            if "anthropic" in p["inferenceProfileId"]:
+            if "nova" in p["inferenceProfileId"] or "anthropic" in p["inferenceProfileId"]:
                 print(f"  {p['inferenceProfileId']}")
     except Exception as e:  # noqa: BLE001
         print(f"(could not list inference profiles: {e})")

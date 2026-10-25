@@ -3,15 +3,17 @@ produces the verdict. Every call is validated against the rule guardrails and
 falls back to the deterministic policy on error, timeout or invalid output."""
 from __future__ import annotations
 
+import copy
 import json
 import os
 import time
 
 from .policy import CHALLENGE_TYPES, forced_action, rule_policy
 
-# Fast, cheap default for a one-tool-call decision; override with BEDROCK_MODEL_ID
-# (e.g. anthropic.claude-sonnet-5-5, or a full inference-profile ID / ARN).
-DEFAULT_MODEL_ID = "anthropic.claude-haiku-5-5"
+# Fast, cheap default for a one-tool-call decision: Amazon Nova Lite through the EU
+# cross-region inference profile (the project Region is eu-north-1). Override with
+# BEDROCK_MODEL_ID (e.g. eu.amazon.nova-pro-v1:0, anthropic.claude-haiku-5-5, an ARN).
+DEFAULT_MODEL_ID = "eu.amazon.nova-lite-v1:0"
 # Cross-region inference-profile prefixes Bedrock uses in front of model IDs.
 PROFILE_PREFIXES = ("us", "eu", "apac", "global", "us-gov", "jp", "au", "ca")
 _MODEL_ID_ERRORS = ("inference profile", "on-demand throughput", "model identifier", "model id", "provided model")
@@ -51,6 +53,41 @@ TOOLS = [
 ]
 
 
+def model_family(model_id: str) -> str:
+    m = model_id.lower()
+    if "amazon.nova" in m:
+        return "nova"
+    if "anthropic." in m:
+        return "anthropic"
+    return "other"
+
+
+def tools_for(family: str) -> list[dict]:
+    """Nova's tool schemas accept a JSON-Schema subset; drop additionalProperties for it."""
+    if family != "nova":
+        return TOOLS
+    tools = copy.deepcopy(TOOLS)
+    for t in tools:
+        t["toolSpec"]["inputSchema"]["json"].pop("additionalProperties", None)
+    return tools
+
+
+def request_for(family: str, model_id: str, base: dict) -> tuple[dict, dict]:
+    """(request, optional extras). Extras are dropped on retry if the model rejects them."""
+    max_tokens = int(os.environ.get("BEDROCK_MAX_TOKENS", "1000" if family == "nova" else "2000"))
+    req = dict(base, modelId=model_id, toolConfig={"tools": tools_for(family), "toolChoice": {"auto": {}}})
+    if family == "nova":
+        # AWS recommends greedy decoding for Nova tool calling.
+        req["inferenceConfig"] = {"maxTokens": max_tokens, "temperature": 0.0}
+        extras = {"additionalModelRequestFields": {"inferenceConfig": {"topK": 1}}}
+    else:
+        req["inferenceConfig"] = {"maxTokens": max_tokens}
+        effort = os.environ.get("BEDROCK_EFFORT", "low")
+        extras = {"additionalModelRequestFields": {"output_config": {"effort": effort}}} \
+            if family == "anthropic" and effort else {}
+    return req, extras
+
+
 class PolicyError(Exception):
     pass
 
@@ -64,7 +101,7 @@ def _bedrock():
         import boto3
         from botocore.config import Config
         _client = boto3.client(
-            "bedrock-runtime", region_name=os.environ.get("BEDROCK_REGION") or os.environ.get("AWS_REGION", "us-east-1"),
+            "bedrock-runtime", region_name=os.environ.get("BEDROCK_REGION") or os.environ.get("AWS_REGION", "eu-north-1"),
             config=Config(read_timeout=float(os.environ.get("BEDROCK_TIMEOUT_S", "12")), connect_timeout=3,
                           retries={"max_attempts": 1, "mode": "standard"}))
     return _client
@@ -104,15 +141,33 @@ def _is_model_id_error(e: Exception) -> bool:
     return any(k in str(e).lower() for k in _MODEL_ID_ERRORS)
 
 
-def _converse(client, req: dict, effort: str | None):
-    """Converse call; drops the effort field if the model rejects it."""
-    if effort:
+def _converse(client, req: dict, extras: dict):
+    """Converse call; retries without the model-specific extras if they are rejected."""
+    if extras:
         try:
-            return client.converse(**req, additionalModelRequestFields={"output_config": {"effort": effort}})
+            return client.converse(**req, **extras)
         except client.exceptions.ValidationException as e:
             if _is_model_id_error(e):
                 raise
     return client.converse(**req)
+
+
+def _normalise(call: dict) -> dict:
+    """Tolerate model quirks: input as a JSON string, enum values in another case."""
+    args = call.get("input")
+    if isinstance(args, str):
+        try:
+            args = json.loads(args)
+        except json.JSONDecodeError as e:
+            raise PolicyError(f"tool input is not JSON: {e}") from e
+    if not isinstance(args, dict):
+        raise PolicyError(f"tool input must be an object, got {type(args).__name__}")
+    if isinstance(args.get("challenge"), str):
+        args["challenge"] = args["challenge"].strip().lower()
+    name = str(call.get("name", "")).strip()
+    if name not in ("issue_challenge", "request_better_conditions", "conclude"):
+        raise PolicyError(f"unknown tool {name!r}")
+    return {**call, "name": name, "input": args}
 
 
 def _validate(call: dict, state: dict) -> None:
@@ -132,16 +187,13 @@ def _validate(call: dict, state: dict) -> None:
 def bedrock_policy(state: dict, cfg: dict, confident: bool) -> dict:
     """Ask the model for the next action. Raises PolicyError on any problem."""
     configured = os.environ.get("BEDROCK_MODEL_ID") or DEFAULT_MODEL_ID
-    region = os.environ.get("BEDROCK_REGION") or os.environ.get("AWS_REGION", "us-east-1")
+    region = os.environ.get("BEDROCK_REGION") or os.environ.get("AWS_REGION", "eu-north-1")
     msg = {"role": "user", "content": [{"text": "Current session state (JSON):\n" + json.dumps(state, sort_keys=True)
                                         + f"\nScorer early-stop rule says confident={str(confident).lower()}."
                                         + "\nCall exactly one tool now."}]}
-    # toolChoice "auto": current Claude models reject forced tool choice ("any"/"tool");
-    # the prompt asks for exactly one call and _validate enforces it.
-    base = dict(system=[{"text": SYSTEM_PROMPT}], messages=[msg],
-                toolConfig={"tools": TOOLS, "toolChoice": {"auto": {}}},
-                inferenceConfig={"maxTokens": int(os.environ.get("BEDROCK_MAX_TOKENS", "2000"))})
-    effort = os.environ.get("BEDROCK_EFFORT", "low")
+    # toolChoice "auto": Nova and current Claude models both support it (Claude rejects
+    # forced choice); the prompt asks for exactly one call and _validate enforces it.
+    base = dict(system=[{"text": SYSTEM_PROMPT}], messages=[msg])
     candidates = [_resolved[configured]] if configured in _resolved else \
         candidate_model_ids(configured, region, os.environ.get("BEDROCK_PROFILE", "auto"))
     t0 = time.perf_counter()
@@ -150,7 +202,8 @@ def bedrock_policy(state: dict, cfg: dict, confident: bool) -> dict:
         client = _bedrock()
         for mid in candidates:
             try:
-                resp = _converse(client, dict(base, modelId=mid), effort)
+                req, extras = request_for(model_family(mid), mid, base)
+                resp = _converse(client, req, extras)
                 model_id = _resolved[configured] = mid
                 break
             except client.exceptions.ValidationException as e:
@@ -165,7 +218,7 @@ def bedrock_policy(state: dict, cfg: dict, confident: bool) -> dict:
     calls = [b["toolUse"] for b in resp.get("output", {}).get("message", {}).get("content", []) if "toolUse" in b]
     if len(calls) != 1:
         raise PolicyError(f"expected one tool call, got {len(calls)} (stopReason={resp.get('stopReason')})")
-    call = calls[0]
+    call = _normalise(calls[0])
     _validate(call, state)
     args = call["input"]
     out = {"action": call["name"], "reason": args["reason"].strip(), "model_id": model_id,

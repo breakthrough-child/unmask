@@ -2,3 +2,5 @@
 -r requirements-lambda.txt
 pytest==9.1.1
 matplotlib==3.11.2
+# needed locally for 'aws login' credentials (botocore[crt]); not used in Lambda
+awscrt==0.36.0

@@ -8,10 +8,11 @@ Description: >
 Parameters:
   BedrockModelId:
     Type: String
-    Default: anthropic.claude-haiku-5-5
+    Default: eu.amazon.nova-lite-v1:0
     Description: >-
-      Bedrock model ID for the agent's next-action choice (fast/cheap tier; e.g. anthropic.claude-sonnet-5-5).
-      May also be a full inference-profile ID (us./eu./apac./global.) or ARN. Run `make check-bedrock`.
+      Bedrock model or inference-profile ID for the agent's next-action choice (default Amazon Nova Lite via
+      the EU cross-region profile, used exactly as given). Bare IDs such as amazon.nova-pro-v1:0 or
+      anthropic.claude-haiku-5-5 also work (see BedrockProfile). Run `make check-bedrock`.
   BedrockProfile:
     Type: String
     Default: auto
@@ -136,6 +137,7 @@ Resources:
               Effect: Allow
               Action: [bedrock:InvokeModel]
               Resource:
+                - "arn:aws:bedrock:*::foundation-model/amazon.nova-*"
                 - "arn:aws:bedrock:*::foundation-model/anthropic.*"
                 - !Sub "arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/*"
                 - !Sub "arn:aws:bedrock:*:${AWS::AccountId}:application-inference-profile/*"

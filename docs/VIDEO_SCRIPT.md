@@ -50,7 +50,7 @@ face (state on screen: "swap uses an AI-generated face of no real person"); righ
 editor and highlight signals_after → decision across two steps]**
 
 > This is the agentic part. After every clip, OpenCV's measurements become per-signal scores with an
-> uncertainty. The agent, Claude on Amazon Bedrock with tool use, picks one action:
+> uncertainty. The agent, Amazon Nova Lite on Bedrock with tool use, picks one action:
 > issue a challenge, ask for better conditions, or conclude. Here you can see the vision output
 > change the decision: after the head turn, seam and pose became decisive, so the next call switched to
 > hand_pass. If Bedrock fails or answers something invalid, a rule-based policy with the same logic

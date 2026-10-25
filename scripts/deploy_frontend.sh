@@ -2,7 +2,7 @@
 # Upload frontend/ to the stack's S3 bucket, write config.js with the API URL, invalidate CloudFront.
 set -euo pipefail
 STACK="${1:-unmask}"
-REGION="${2:-us-east-1}"
+REGION="${2:-eu-north-1}"
 out() { aws cloudformation describe-stacks --stack-name "$STACK" --region "$REGION" \
           --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" --output text; }
 API=$(out ApiUrl); BUCKET=$(out FrontendBucketName); DIST=$(out DistributionId); URL=$(out FrontendUrl)

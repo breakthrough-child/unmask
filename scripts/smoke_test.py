@@ -1,7 +1,7 @@
 """Smoke test against the deployed API: health, a full session on a sample clip set, trace, delete.
 
-  python scripts/smoke_test.py --stack unmask --region us-east-1
-  python scripts/smoke_test.py --api https://xxxx.execute-api.us-east-1.amazonaws.com
+  python scripts/smoke_test.py --stack unmask --region eu-north-1
+  python scripts/smoke_test.py --api https://xxxx.execute-api.eu-north-1.amazonaws.com
   python scripts/smoke_test.py --api http://localhost:8000/api     # local server
 
 Records Lambda (server-side) latencies to docs/results/lambda_latency.json.
@@ -54,7 +54,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--api")
     ap.add_argument("--stack", default="unmask")
-    ap.add_argument("--region", default="us-east-1")
+    ap.add_argument("--region", default="eu-north-1")
     ap.add_argument("--sample", default=None, help="sample id from frontend/samples/manifest.json")
     ap.add_argument("--no-record", action="store_true")
     a = ap.parse_args()

@@ -1,6 +1,6 @@
 PY ?= .venv/bin/python
 STACK ?= unmask
-REGION ?= us-east-1
+REGION ?= eu-north-1
 PORT ?= 8000
 
 .PHONY: setup test eval eval-synth samples serve build deploy deploy-frontend smoke check-bedrock diagrams clean

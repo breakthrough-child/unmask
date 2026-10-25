@@ -17,7 +17,7 @@ flowchart LR
     L["Lambda container (3008 MB, x86_64)<br/>OpenCV 5.0 headless + YuNet<br/>vision → scorer → agent"]
     S3[("S3 clip bucket<br/>private · SSE · TLS-only<br/>lifecycle: delete after 1 day")]
     DDB[("DynamoDB sessions + traces<br/>on-demand · TTL 24 h")]
-    BR["Amazon Bedrock<br/>Converse API + tool use (Claude)"]
+    BR["Amazon Bedrock<br/>Converse API + tool use (Nova Lite)"]
     CW["CloudWatch<br/>JSON logs · EMF metrics<br/>dashboard · alarm"]
   end
 
@@ -67,6 +67,6 @@ A 5 s clip analyses in well under API Gateway's 30 s integration limit (see
 
 The Lambda role can only: `s3:GetObject/PutObject/DeleteObject` on `clips/*` and `evidence/*` of
 the clip bucket, `s3:ListBucket` on those prefixes (for user-initiated delete), `dynamodb:GetItem/
-PutItem/DeleteItem` on the session table, and `bedrock:InvokeModel` on Anthropic foundation models
+PutItem/DeleteItem` on the session table, and `bedrock:InvokeModel` on Amazon Nova (and Anthropic) foundation models
 and this account's inference profiles. No secrets exist in code or configuration: AWS access is via
 the execution role.
