@@ -18,12 +18,12 @@ OpenCV output decides the agent's next tool call.
 
 | | |
 |---|---|
-| Live demo | _see `FrontendUrl` after deploy (filled in docs/DEVPOST_SUBMISSION.md)_ |
+| Live demo | ⏳ pending deployment (`FrontendUrl` stack output) |
 | Technical report | [docs/REPORT.md](docs/REPORT.md) |
 | Architecture | [docs/architecture.md](docs/architecture.md) |
 | Agent workflow | [docs/agent-workflow.md](docs/agent-workflow.md) |
 | Example decision trace | [docs/AGENT_TRACE_EXAMPLE.json](docs/AGENT_TRACE_EXAMPLE.json) |
-| Evaluation results | [docs/results/results.md](docs/results/results.md) |
+| Evaluation results | real recordings: `docs/results/results.md` (⏳ pending data) · pipeline check: [docs/results/synthetic/results.md](docs/results/synthetic/results.md) |
 
 ## Verified versions
 
@@ -87,7 +87,7 @@ increments the `BedrockFallbacks` metric. Set `UseBedrock=false` to run rules on
 ## Evaluate
 
 ```bash
-make eval-synth     # pipeline check on generated fixtures -> eval/out/synthetic-results/
+make eval-synth     # pipeline check on generated fixtures -> docs/results/synthetic/
 make eval           # your recordings in data/ (see docs/DATA_COLLECTION.md) -> docs/results/
 .venv/bin/python eval/run_eval.py --data data --write-config --export-trace   # refit thresholds
 ```

@@ -1,13 +1,14 @@
 # Devpost submission text
 
-_Paste each section into the matching Devpost field. Replace every «…» with the final values
-from `docs/results/results.md` and the stack outputs; don't paste any number that isn't there._
+_Paste each section into the matching Devpost field. Items marked **⏳ PENDING** still need a value
+that doesn't exist yet (deployment, real-data evaluation, video). Fill them from the stack outputs
+and `docs/results/results.md`; don't paste any number that isn't there._
 
 **Project name:** Unmask
 
 **Tagline:** An OpenCV 5 agent that catches real-time face swaps on video calls by asking the caller to move.
 
-**Links:** Live demo «FrontendUrl» · Repo «repo URL» · Video «YouTube URL»
+**Links:** Live demo ⏳ PENDING (`FrontendUrl` output after `sam deploy`) · Repo https://github.com/breakthrough-child/unmask · Video ⏳ PENDING (YouTube URL)
 
 ---
 
@@ -74,9 +75,11 @@ as a timeline and can be downloaded as JSON.
 - **Keeping the LLM in its lane.** We wanted real agentic choices without letting a language model
   decide whether someone is a fraudster. Splitting "what to test next" (agent) from "what the
   evidence says" (deterministic scorer), with guardrails and a fallback, solved it.
-- **Staying inside API Gateway's 30 s limit** on CPU-only Lambda: downscaling to 640 px, 10 fps
-  sampling, and computing optical flow at 320 px keep a 5 s clip at «X» s.
-- «add any real-data surprises here»
+- **OpenCV 5's new DNN engine is slower on CPU.** YuNet took 63 ms per 640×480 frame but 17 ms at
+  320×240, so we detect on a downscaled copy and scale the landmarks back. With 10 fps sampling and
+  optical flow at 192 px, a 5 s clip analyses in about 2–4 s on a laptop CPU (p50 1.9–3.8 s),
+  far inside API Gateway's 30 s limit. Lambda timing: ⏳ PENDING (`make smoke`).
+- ⏳ PENDING: what surprised us once real recordings went through the pipeline.
 
 ## Accomplishments that we're proud of
 
@@ -89,9 +92,12 @@ as a timeline and can be downloaded as JSON.
 
 ## What we learned
 
-- Challenge-response beats passive detection for live swaps, and *which* challenge matters:
-  «insert the finding from the per-challenge table».
-- Quality gates matter as much as detectors; most errors on real calls came from «…».
+- Challenge-response is what makes a decision possible: in our synthetic pipeline check (cartoon fixtures, not real swaps), passive analysis
+  alone left half the sessions inconclusive, while challenges let the scorer commit, and the agent
+  got there with fewer challenges (2.5 vs 2.9) than a fixed sequence. Which challenge matters most
+  on real swaps: ⏳ PENDING (per-challenge table from real recordings).
+- Quality gates matter as much as detectors: a clip with no visible face has to turn into a
+  specific instruction, not a verdict. Main source of errors on real calls: ⏳ PENDING (real data).
 - Tool use is a great interface for constrained agent decisions: small action space, validated
   arguments, full trace.
 

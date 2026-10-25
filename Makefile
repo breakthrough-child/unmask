@@ -18,8 +18,8 @@ test:             ## unit + pipeline tests
 eval:             ## evaluate on data/ (your recordings)
 	$(PY) eval/run_eval.py --data data --export-trace
 
-eval-synth:       ## evaluate on generated synthetic fixtures (pipeline check)
-	$(PY) eval/run_eval.py --synthetic --out eval/out/synthetic-results
+eval-synth:       ## evaluate on generated synthetic fixtures (pipeline check) -> docs/results/synthetic/
+	$(PY) eval/run_eval.py --synthetic --out docs/results/synthetic
 
 samples:          ## copy sample clips into frontend/samples
 	$(PY) scripts/make_samples.py

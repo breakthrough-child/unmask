@@ -4,7 +4,7 @@
   "participant": "synth03",
   "label": "real",
   "condition": "synthetic",
-  "session_id": "623b2605dede4ff199fdd1f6fb606ceb",
+  "session_id": "7bb9af1498444b2bbcf5b853c2977e1a",
   "status": "concluded",
   "result": {
     "risk": 0.143,
@@ -150,7 +150,7 @@
   "trace": [
     {
       "step": 1,
-      "ts": 1792912130.571,
+      "ts": 1792930533.157,
       "event": {
         "type": "clip_analysed",
         "challenge": "passive",
@@ -291,12 +291,12 @@
           "light_change": 1.456
         },
         "policy": "rule",
-        "latency_ms": 0.2
+        "latency_ms": 0.1
       }
     },
     {
       "step": 2,
-      "ts": 1792912130.572,
+      "ts": 1792930533.158,
       "event": {
         "type": "clip_analysed",
         "challenge": "hand_pass",
@@ -479,7 +479,7 @@
     },
     {
       "step": 3,
-      "ts": 1792912130.573,
+      "ts": 1792930533.159,
       "event": {
         "type": "clip_analysed",
         "challenge": "head_turn",
@@ -661,7 +661,7 @@
     },
     {
       "step": 4,
-      "ts": 1792912130.574,
+      "ts": 1792930533.159,
       "event": {
         "type": "user_skipped",
         "challenge": "head_turn",
@@ -809,7 +809,7 @@
     },
     {
       "step": 5,
-      "ts": 1792912130.575,
+      "ts": 1792930533.16,
       "event": {
         "type": "clip_analysed",
         "challenge": "light_change",
