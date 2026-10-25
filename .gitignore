@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.aws-sam/
+samconfig.toml
+data/
+eval/out/
+*.egg-info/
+.env
+fixtures/generated/
+frontend/config.js
+.local-store/

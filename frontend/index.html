@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Unmask: check a video caller</title>
+  <meta name="description" content="Check whether the person on your video call is a real-time face swap. Unmask gives a risk assessment, not proof.">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23123a6b'/%3E%3Cpath d='M8 14q8-7 16 0q-8 9-16 0z' fill='white'/%3E%3C/svg%3E">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap">
+    <div class="brand"><span class="logo" aria-hidden="true"></span> Unmask</div>
+    <p class="tag">Is the face on your video call real? Run a few quick checks before you trust it.</p>
+  </div>
+</header>
+
+<div class="disclaimer" role="note">
+  <div class="wrap"><strong>Risk assessment, not proof.</strong> Unmask can be wrong in both directions. It never ends calls,
+    contacts anyone, or identifies the caller. Clips are deleted within 24 hours.</div>
+</div>
+
+<main id="main" class="wrap">
+  <nav class="modes" role="tablist" aria-label="Mode">
+    <button role="tab" id="tab-live" aria-controls="panel-live" aria-selected="true">Check a live caller</button>
+    <button role="tab" id="tab-upload" aria-controls="panel-upload" aria-selected="false">Analyse a recording</button>
+  </nav>
+
+  <!-- ============================== LIVE -->
+  <section id="panel-live" role="tabpanel" aria-labelledby="tab-live">
+    <ol class="howto">
+      <li>Open your call (WhatsApp Web, Meet, Zoom…) in another window or tab.</li>
+      <li>Press <b>Share the call window</b> and pick that window. Make the caller's video big.</li>
+      <li>Unmask records short clips and tells you what to ask the caller to do.</li>
+    </ol>
+    <p class="support" id="share-support"></p>
+    <div class="row">
+      <button class="primary big" id="btn-share">Share the call window</button>
+      <button id="btn-stop-share" hidden>Stop sharing</button>
+    </div>
+    <div class="live-grid" id="live-area" hidden>
+      <div class="preview">
+        <div class="preview-box" id="preview-box">
+          <video id="preview" muted playsinline></video>
+          <div id="crop-rect" class="crop-rect" hidden></div>
+        </div>
+        <p class="hint">Optional: drag on the preview to select just the caller's video tile. <button class="link" id="btn-clear-crop">Use whole window</button></p>
+      </div>
+      <div class="prompt-card" id="prompt-card" aria-live="polite">
+        <p class="eyebrow" id="prompt-step">Step 1 · Passive scan</p>
+        <p class="prompt" id="prompt-text">Keep the caller's video visible. We'll record 10 seconds without asking them anything.</p>
+        <p class="why" id="prompt-why"></p>
+        <div class="countdown" id="countdown" aria-live="assertive"></div>
+        <div class="row">
+          <button class="primary big" id="btn-record">Start recording</button>
+          <button id="btn-skip">Skip this check</button>
+          <button id="btn-finish">Stop and show result</button>
+        </div>
+        <div class="progress" id="live-status" role="status"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== UPLOAD -->
+  <section id="panel-upload" role="tabpanel" aria-labelledby="tab-upload" hidden>
+    <div class="samples">
+      <h2>Try a sample</h2>
+      <p class="muted">One click: each runs a full agent session on pre-recorded clips.</p>
+      <div class="row" id="sample-buttons"><span class="muted">Loading samples…</span></div>
+    </div>
+    <form id="upload-form" class="upload-form">
+      <h2>Or upload your own clips</h2>
+      <p class="muted">A short recording of the call goes in <b>Passive</b>. If you recorded the caller doing the challenges, add those too:
+        the agent asks for them in the order it chooses, and skips any you don't have.</p>
+      <div class="files">
+        <label>Passive / call recording <input type="file" accept="video/*" data-ch="passive"></label>
+        <label>Head turn <input type="file" accept="video/*" data-ch="head_turn"></label>
+        <label>Hand pass <input type="file" accept="video/*" data-ch="hand_pass"></label>
+        <label>Light change <input type="file" accept="video/*" data-ch="light_change"></label>
+      </div>
+      <button class="primary big" type="submit">Analyse</button>
+      <div class="progress" id="upload-status" role="status"></div>
+    </form>
+  </section>
+
+  <!-- ============================== RESULTS -->
+  <section id="results" hidden aria-live="polite">
+    <div class="verdict" id="verdict">
+      <div class="verdict-label" id="verdict-label"></div>
+      <div class="meter" aria-hidden="true"><div class="meter-fill" id="meter-fill"></div></div>
+      <p class="risk" id="verdict-risk"></p>
+      <p class="advice" id="verdict-advice"></p>
+      <ul class="reasons" id="verdict-reasons"></ul>
+    </div>
+    <h2>Evidence frames</h2>
+    <div class="evidence" id="evidence"></div>
+    <h2>Signals</h2>
+    <table class="signals"><thead><tr><th scope="col">Signal</th><th scope="col">Suspicion</th><th scope="col">Certainty</th></tr></thead>
+      <tbody id="signals"></tbody></table>
+    <h2>What the agent saw, chose and why</h2>
+    <ol class="timeline" id="timeline"></ol>
+    <div class="row">
+      <button id="btn-trace">Download decision trace (JSON)</button>
+      <button id="btn-delete" class="danger">Delete my clips now</button>
+      <button id="btn-again" class="primary">Check again</button>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap foot">
+  <p>Unmask · OpenCV 5 on AWS Lambda · agent on Amazon Bedrock. <a href="https://github.com/" id="repo-link">Source &amp; docs</a></p>
+</footer>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

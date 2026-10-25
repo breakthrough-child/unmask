@@ -1,0 +1,5 @@
+# Runtime dependencies baked into the Lambda container image (exact pins).
+opencv-python-headless==5.0.0.93
+numpy==2.5.4
+boto3==1.43.118
+botocore==1.43.118

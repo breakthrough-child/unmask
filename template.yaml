@@ -1,0 +1,278 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Unmask - agentic OpenCV 5 checks for real-time face-swap video calls.
+  S3 + CloudFront frontend, HTTP API, Lambda container (OpenCV 5 + YuNet),
+  DynamoDB sessions/traces, Bedrock Converse agent, CloudWatch dashboard.
+
+Parameters:
+  BedrockModelId:
+    Type: String
+    Default: anthropic.claude-opus-5-5
+    Description: Bedrock model or inference-profile ID used for the agent's next-action choice (run `make check-bedrock`).
+  BedrockRegion:
+    Type: String
+    Default: ""
+    Description: Region for Bedrock calls (blank = the stack's region).
+  UseBedrock:
+    Type: String
+    Default: "true"
+    AllowedValues: ["true", "false"]
+  DevOrigin:
+    Type: String
+    Default: http://localhost:8000
+    Description: Extra CORS origin for local frontend development.
+  RetentionDays:
+    Type: Number
+    Default: 14
+
+Conditions:
+  HasBedrockRegion: !Not [!Equals [!Ref BedrockRegion, ""]]
+
+Globals:
+  Function:
+    Tracing: Active
+
+Resources:
+  # ------------------------------------------------------------------ data
+  ClipBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: {SSEAlgorithm: AES256}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules: [{ObjectOwnership: BucketOwnerEnforced}]
+      LifecycleConfiguration:
+        Rules:
+          - Id: delete-everything-after-1-day
+            Status: Enabled
+            ExpirationInDays: 1
+            AbortIncompleteMultipartUpload: {DaysAfterInitiation: 1}
+      CorsConfiguration:
+        CorsRules:
+          - AllowedMethods: [POST]
+            AllowedOrigins: [!Sub "https://${Distribution.DomainName}", !Ref DevOrigin]
+            AllowedHeaders: ["*"]
+            MaxAge: 3000
+
+  ClipBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ClipBucket
+      PolicyDocument:
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource: [!GetAtt ClipBucket.Arn, !Sub "${ClipBucket.Arn}/*"]
+            Condition: {Bool: {"aws:SecureTransport": "false"}}
+
+  SessionTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions: [{AttributeName: session_id, AttributeType: S}]
+      KeySchema: [{AttributeName: session_id, KeyType: HASH}]
+      TimeToLiveSpecification: {AttributeName: expires_at, Enabled: true}
+      SSESpecification: {SSEEnabled: true}
+
+  # ------------------------------------------------------------------ compute
+  AnalyzeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      MemorySize: 3008
+      Timeout: 60
+      Architectures: [x86_64]
+      Environment:
+        Variables:
+          CLIP_BUCKET: !Ref ClipBucket
+          SESSION_TABLE: !Ref SessionTable
+          USE_BEDROCK: !Ref UseBedrock
+          BEDROCK_MODEL_ID: !Ref BedrockModelId
+          BEDROCK_REGION: !If [HasBedrockRegion, !Ref BedrockRegion, !Ref "AWS::Region"]
+          BEDROCK_TIMEOUT_S: "12"
+          ALLOWED_ORIGIN: !Sub "https://${Distribution.DomainName}"
+          METRICS_NAMESPACE: Unmask
+      LoggingConfig:
+        LogFormat: Text
+        LogGroup: !Ref AnalyzeLogGroup
+      Policies:
+        - Statement:
+            - Sid: Clips
+              Effect: Allow
+              Action: [s3:GetObject, s3:PutObject, s3:DeleteObject]
+              Resource:
+                - !Sub "${ClipBucket.Arn}/clips/*"
+                - !Sub "${ClipBucket.Arn}/evidence/*"
+            - Sid: ListForDelete
+              Effect: Allow
+              Action: s3:ListBucket
+              Resource: !GetAtt ClipBucket.Arn
+              Condition:
+                StringLike: {"s3:prefix": ["clips/*", "evidence/*"]}
+            - Sid: Sessions
+              Effect: Allow
+              Action: [dynamodb:GetItem, dynamodb:PutItem, dynamodb:DeleteItem]
+              Resource: !GetAtt SessionTable.Arn
+            - Sid: BedrockConverse
+              Effect: Allow
+              Action: [bedrock:InvokeModel]
+              Resource:
+                - "arn:aws:bedrock:*::foundation-model/anthropic.*"
+                - !Sub "arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/*"
+                - !Sub "arn:aws:bedrock:*:${AWS::AccountId}:application-inference-profile/*"
+      Events:
+        Health: {Type: HttpApi, Properties: {ApiId: !Ref Api, Method: GET, Path: /health}}
+        Create: {Type: HttpApi, Properties: {ApiId: !Ref Api, Method: POST, Path: /sessions}}
+        Get: {Type: HttpApi, Properties: {ApiId: !Ref Api, Method: GET, Path: "/sessions/{id}"}}
+        Delete: {Type: HttpApi, Properties: {ApiId: !Ref Api, Method: DELETE, Path: "/sessions/{id}"}}
+        Trace: {Type: HttpApi, Properties: {ApiId: !Ref Api, Method: GET, Path: "/sessions/{id}/trace"}}
+        UploadUrl: {Type: HttpApi, Properties: {ApiId: !Ref Api, Method: POST, Path: "/sessions/{id}/upload-url"}}
+        Clips: {Type: HttpApi, Properties: {ApiId: !Ref Api, Method: POST, Path: "/sessions/{id}/clips"}}
+        Skip: {Type: HttpApi, Properties: {ApiId: !Ref Api, Method: POST, Path: "/sessions/{id}/skip"}}
+        Finish: {Type: HttpApi, Properties: {ApiId: !Ref Api, Method: POST, Path: "/sessions/{id}/finish"}}
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: .
+      DockerTag: python3.12-opencv5
+
+  AnalyzeLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: !Ref RetentionDays
+
+  Api:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowOrigins: [!Sub "https://${Distribution.DomainName}", !Ref DevOrigin]
+        AllowMethods: [GET, POST, DELETE, OPTIONS]
+        AllowHeaders: [content-type]
+        MaxAge: 600
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 20
+        ThrottlingRateLimit: 10
+
+  # ------------------------------------------------------------------ frontend
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: {SSEAlgorithm: AES256}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules: [{ObjectOwnership: BucketOwnerEnforced}]
+
+  FrontendOAC:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub "${AWS::StackName}-frontend-oac"
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: Unmask frontend
+        DefaultRootObject: index.html
+        HttpVersion: http2and3
+        PriceClass: PriceClass_100
+        Origins:
+          - Id: frontend
+            DomainName: !GetAtt FrontendBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt FrontendOAC.Id
+            S3OriginConfig: {OriginAccessIdentity: ""}
+        DefaultCacheBehavior:
+          TargetOriginId: frontend
+          ViewerProtocolPolicy: redirect-to-https
+          Compress: true
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6        # Managed-CachingOptimized
+          ResponseHeadersPolicyId: 67f7725c-6f97-4210-82d7-5512b31e9d03  # Managed-SecurityHeadersPolicy
+
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Statement:
+          - Sid: CloudFrontRead
+            Effect: Allow
+            Principal: {Service: cloudfront.amazonaws.com}
+            Action: s3:GetObject
+            Resource: !Sub "${FrontendBucket.Arn}/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribution}"
+
+  # ------------------------------------------------------------------ observability
+  ErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Unmask API errors
+      Namespace: Unmask
+      MetricName: Errors
+      Dimensions: [{Name: Route, Value: "/sessions/{id}/clips"}]
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  Dashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: !Sub "${AWS::StackName}-unmask"
+      DashboardBody: !Sub |
+        {"widgets": [
+          {"type":"metric","x":0,"y":0,"width":12,"height":6,"properties":{"title":"Clip latency (ms)","region":"${AWS::Region}","stat":"p50","period":300,
+            "metrics":[["Unmask","ClipLatencyMs","Challenge","passive"],["...","head_turn"],["...","hand_pass"],["...","light_change"],
+                       ["Unmask","ClipLatencyMs","Challenge","passive",{"stat":"p95","label":"passive p95"}]]}},
+          {"type":"metric","x":12,"y":0,"width":12,"height":6,"properties":{"title":"Verdicts","region":"${AWS::Region}","stat":"Sum","period":3600,
+            "metrics":[["Unmask","Verdicts","Verdict","LOW_RISK"],["...","SUSPICIOUS"],["...","HIGH_RISK"],["...","INCONCLUSIVE"]]}},
+          {"type":"metric","x":0,"y":6,"width":8,"height":6,"properties":{"title":"Inconclusive rate (%)","region":"${AWS::Region}","stat":"Average","period":3600,
+            "metrics":[["Unmask","InconclusiveRate"]]}},
+          {"type":"metric","x":8,"y":6,"width":8,"height":6,"properties":{"title":"Bedrock fallbacks / errors","region":"${AWS::Region}","stat":"Sum","period":300,
+            "metrics":[["Unmask","BedrockFallbacks"],["Unmask","Errors","Route","/sessions/{id}/clips"]]}},
+          {"type":"metric","x":16,"y":6,"width":8,"height":6,"properties":{"title":"Agent decision latency (ms)","region":"${AWS::Region}","stat":"p50","period":300,
+            "metrics":[["Unmask","AgentLatencyMs","Policy","bedrock"],["...","rule_fallback"],["...","guardrail"]]}},
+          {"type":"metric","x":0,"y":12,"width":12,"height":6,"properties":{"title":"Clips analysed (usable vs not)","region":"${AWS::Region}","stat":"Sum","period":3600,
+            "metrics":[["Unmask","ClipsAnalysed","Usable","True"],["...","False"]]}},
+          {"type":"metric","x":12,"y":12,"width":12,"height":6,"properties":{"title":"Lambda","region":"${AWS::Region}","period":300,
+            "metrics":[["AWS/Lambda","Duration","FunctionName","${AnalyzeFunction}",{"stat":"p95"}],[".","Errors",".",".",{"stat":"Sum"}],[".","Throttles",".",".",{"stat":"Sum"}]]}},
+          {"type":"log","x":0,"y":18,"width":24,"height":6,"properties":{"title":"Recent agent decisions","region":"${AWS::Region}",
+            "query":"SOURCE '${AnalyzeLogGroup}' | filter event='clip_analysed' | fields @timestamp, session_id, challenge, usable, reason, action, next_challenge, policy, risk, total_ms | sort @timestamp desc | limit 50"}}
+        ]}
+
+Outputs:
+  ApiUrl:
+    Value: !Sub "https://${Api}.execute-api.${AWS::Region}.${AWS::URLSuffix}"
+  FrontendUrl:
+    Value: !Sub "https://${Distribution.DomainName}"
+  FrontendBucketName:
+    Value: !Ref FrontendBucket
+  DistributionId:
+    Value: !Ref Distribution
+  ClipBucketName:
+    Value: !Ref ClipBucket
+  SessionTableName:
+    Value: !Ref SessionTable
+  DashboardUrl:
+    Value: !Sub "https://${AWS::Region}.console.aws.amazon.com/cloudwatch/home?region=${AWS::Region}#dashboards:name=${AWS::StackName}-unmask"
