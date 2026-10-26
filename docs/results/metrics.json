@@ -94,39 +94,75 @@
   },
   "latency_lambda": {
     "api": "flqstgd5x1.execute-api",
-    "measured_at": "2026-10-25 23:04",
+    "measured_at": "2026-10-26 14:09",
     "clips": [
       {
         "challenge": "passive",
-        "roundtrip_ms": 12008.2,
-        "analysis_ms": 8417.9,
-        "frames": 80,
-        "usable": true
+        "roundtrip_ms": 23527.0,
+        "analysis_ms": 8527.0,
+        "frames": 100,
+        "usable": true,
+        "sample": "real-daylight"
       },
       {
         "challenge": "light_change",
-        "roundtrip_ms": 13091.6,
-        "analysis_ms": 1310.0,
-        "frames": 50,
-        "usable": true
+        "roundtrip_ms": 8336.0,
+        "analysis_ms": 1729.6,
+        "frames": 60,
+        "usable": true,
+        "sample": "real-daylight"
       },
       {
         "challenge": "hand_pass",
-        "roundtrip_ms": 6174.9,
-        "analysis_ms": 1926.5,
-        "frames": 50,
-        "usable": true
+        "roundtrip_ms": 11209.1,
+        "analysis_ms": 2348.0,
+        "frames": 60,
+        "usable": true,
+        "sample": "real-daylight"
       },
       {
         "challenge": "head_turn",
-        "roundtrip_ms": 9611.7,
-        "analysis_ms": 503.8,
-        "frames": 50,
-        "usable": true
+        "roundtrip_ms": 3919.2,
+        "analysis_ms": 792.9,
+        "frames": 60,
+        "usable": true,
+        "sample": "real-daylight"
+      },
+      {
+        "challenge": "passive",
+        "roundtrip_ms": 3911.8,
+        "analysis_ms": 1373.8,
+        "frames": 100,
+        "usable": true,
+        "sample": "swap-daylight"
+      },
+      {
+        "challenge": "light_change",
+        "roundtrip_ms": 5592.7,
+        "analysis_ms": 1097.2,
+        "frames": 60,
+        "usable": true,
+        "sample": "swap-daylight"
+      },
+      {
+        "challenge": "hand_pass",
+        "roundtrip_ms": 4503.0,
+        "analysis_ms": 1391.2,
+        "frames": 60,
+        "usable": true,
+        "sample": "swap-daylight"
+      },
+      {
+        "challenge": "head_turn",
+        "roundtrip_ms": 3483.2,
+        "analysis_ms": 797.6,
+        "frames": 60,
+        "usable": true,
+        "sample": "swap-daylight"
       }
     ],
-    "roundtrip_ms_median": 10810.0,
-    "analysis_ms_median": 1618.2,
+    "roundtrip_ms_median": 5047.9,
+    "analysis_ms_median": 1382.5,
     "note": "roundtrip = client->API Gateway->Lambda (analysis + agent + DynamoDB) -> client; includes cold start on first clip"
   },
   "unusable_reasons": {},

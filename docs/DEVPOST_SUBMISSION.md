@@ -78,7 +78,7 @@ as a timeline and can be downloaded as JSON.
 - **OpenCV 5's new DNN engine is slower on CPU.** YuNet took 63 ms per 640×480 frame but 17 ms at
   320×240, so we detect on a downscaled copy and scale the landmarks back. With 10 fps sampling and
   optical flow at 192 px, our 6–10 s clips analyse in about 2.5–5 s on a laptop CPU (p50), far inside API
-  Gateway's 30 s limit. LAMBDA_TIMING_PLACEHOLDER The first request to a freshly deployed container image
+  Gateway's 30 s limit. On Lambda (eu-north-1) warm OpenCV analysis takes 0.8–2.3 s per clip and each Nova Lite decision about 0.7 s (6 live decisions, 0 fallbacks); a cold container took 8.5 s for the first clip (23.5 s round trip). The first request to a freshly deployed container image
   timed out while OpenCV loaded, so we added a keep-warm ping and a safe client retry.
 - **A negative result, and finding out why.** We recorded one participant in three lighting sessions, swapped each
   clip with an AI-generated face (an open-source swap pipeline at default settings), and evaluated leave-one-session-out.
@@ -86,7 +86,7 @@ as a timeline and can be downloaded as JSON.
   than the swapped one. Digging in: absolute-threshold artefact features (seam flicker, landmark jumps, lighting
   correlation) vary more between sessions (lighting, how far the person turns: 80° vs 177°) than between real and
   swapped. A hand over the face just stops the swap being applied, so the "face persists over the hand" tell-tale never
-  appears. The only consistent direction was a smoother swapped face (3 of 3 sessions), too small a sample to claim.
+  appears. The only consistent direction was a smoother swapped face (3 of 3 sessions), too small a sample to claim. The live demo agrees: both recorded daylight samples (real and swapped) end LOW_RISK (0.32 and 0.44).
 - **Evaluating with one person.** Leave-one-participant-out is impossible, so we used leave-one-session-out and say
   clearly that it overstates generalisation. Generating the swaps was its own detour: downloading the swap models over a
   slow connection would have taken ~8–16 h, so we ran the swap job in a temporary, private stack in our own AWS account

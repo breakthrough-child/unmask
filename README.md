@@ -40,7 +40,8 @@ all one participant allows). Full tables, per-session numbers, failure cases and
 **The detector does not separate real from swapped callers on this data** (in 2 of 3 sessions the real clip scored the
 higher risk), and 3 sessions per class is far too few to conclude either way. What works end to end: the agentic loop
 (OpenCV measurements change which challenge is asked next; the agent reached the same verdicts with fewer challenges),
-the AWS deployment, observability and the 24 h deletion. Do not use the verdict as a real fraud check.
+the AWS deployment, observability and the 24 h deletion. The two one-click demo samples (real and swapped daylight
+sessions) both end LOW_RISK (0.32 and 0.44): the live demo does **not** catch the swap. Do not use the verdict as a real fraud check.
 
 ## Verified versions
 

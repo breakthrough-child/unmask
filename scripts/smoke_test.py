@@ -57,6 +57,7 @@ def main():
     ap.add_argument("--region", default="eu-north-1")
     ap.add_argument("--sample", default=None, help="sample id from frontend/samples/manifest.json")
     ap.add_argument("--no-record", action="store_true")
+    ap.add_argument("--append", action="store_true", help="add this run's clips to docs/results/lambda_latency.json")
     a = ap.parse_args()
     api = (a.api or stack_api(a.stack, a.region)).rstrip("/")
     manifest = json.loads((ROOT / "frontend" / "samples" / "manifest.json").read_text())
@@ -111,12 +112,16 @@ def main():
     assert d.get("deleted") == sid
     print("deleted session data")
     if lat and not a.no_record and "localhost" not in api:
+        p = ROOT / "docs" / "results" / "lambda_latency.json"
+        if a.append and p.exists():
+            lat = json.loads(p.read_text())["clips"] + [dict(x, sample=sample["id"]) for x in lat]
+        else:
+            lat = [dict(x, sample=sample["id"]) for x in lat]
         out = {"api": api.split("//")[1].split(".")[0] + ".execute-api", "measured_at": time.strftime("%Y-%m-%d %H:%M"),
                "clips": lat,
                "roundtrip_ms_median": round(statistics.median(x["roundtrip_ms"] for x in lat), 1),
                "analysis_ms_median": round(statistics.median(x["analysis_ms"] for x in lat), 1),
                "note": "roundtrip = client->API Gateway->Lambda (analysis + agent + DynamoDB) -> client; includes cold start on first clip"}
-        p = ROOT / "docs" / "results" / "lambda_latency.json"
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(json.dumps(out, indent=2))
         print(f"wrote {p}")

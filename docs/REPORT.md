@@ -254,19 +254,32 @@ Local = Ubuntu laptop CPU (8 threads), measured by the eval harness on the 12 re
 processes were also using the CPU. All are well inside API Gateway's 30 s integration limit. A MediaRecorder WebM
 recorded in the browser decoded and analysed correctly through the local API.
 
-**Lambda (eu-north-1, 3008 MB, x86_64).** Warm OpenCV analysis is faster than on the laptop. The
-first clip after a cold start pays ~8.4 s while the container image's OpenCV layers load lazily. The
-very first invocation of a freshly deployed image exceeded Lambda's 10 s init limit and the request
-timed out at API Gateway's 30 s; an EventBridge keep-warm ping every 5 minutes and a one-time client
-retry for safe calls now cover this. Client round trips from Lagos (upload excluded, analysis + Nova
-decision + DynamoDB + network) were 6.2–13.1 s, median 10.8 s in the last smoke run
-([lambda_latency.json](results/lambda_latency.json)).
+**Lambda (eu-north-1, 3008 MB, x86_64), measured with `make smoke` on 2026-10-26** through the live API with the two
+recorded demo samples (real and swapped daylight sessions, 8 clips, [lambda_latency.json](results/lambda_latency.json)):
 
-**Agent on Bedrock (live).** Across the smoke sessions Amazon Nova Lite (`eu.amazon.nova-lite-v1:0`)
-made **8 decisions with 0 fallbacks**, median **1.01 s** per decision (max 1.19 s); the remaining
-steps were guardrail `conclude`s when no challenge was left. Nova consistently opened with
-`light_change` on these clips where the rule policy usually picks `head_turn`. Both are valid under
-the guardrails; whether that order helps on real swaps is ⏳ PENDING (real data, `--bedrock` replay).
+| Clip | OpenCV analysis on Lambda |
+|---|---|
+| passive (100 frames) | 1.4 s warm; **8.5 s** on the first clip after a fresh deploy (cold container) |
+| head_turn (60 frames) | 0.8 s |
+| hand_pass (60 frames) | 1.4–2.3 s |
+| light_change (60 frames) | 1.1–1.7 s |
+
+Client round trips for the `/clips` call (analysis + S3 download + Nova decision + DynamoDB + network from Lagos, upload
+excluded) were 3.5–11.2 s warm (median over all 8 clips 5.0 s); the single cold-start clip took **23.5 s**, uncomfortably close
+to API Gateway's 30 s limit. The first invocation of a freshly deployed image previously exceeded Lambda's 10 s init
+limit and timed out; an EventBridge keep-warm ping every 5 minutes and a one-time client retry for safe calls cover normal
+use, but the first request after a deploy can still be slow.
+
+**Agent on Bedrock (live).** In the two smoke sessions Amazon Nova Lite (`eu.amazon.nova-lite-v1:0`) made **6 decisions with
+0 fallbacks** (median **0.72 s**, max 1.14 s per decision; the other 2 steps were guardrail `conclude`s when no challenge was
+left). Nova chose `light_change → hand_pass → head_turn` in both sessions, whereas the rule policy replay opens with
+`head_turn` for daylight sessions; both are valid under the guardrails. Its stated reasons were generic one-liners ("to resolve
+the most uncertain signals …") rather than quoting the signal values the prompt asks for. Whether Nova's order changes verdict
+quality was not measured (the offline evaluation used the rule policy).
+
+**Live demo check.** With the deployed thresholds (`scoring_v1`, an in-sample fit) the real daylight sample ends **LOW_RISK
+(risk 0.32)** and the swapped daylight sample **LOW_RISK (0.44)**: the deployed demo does **not** flag the swap, matching the
+missed-swap failure case in §6.2.
 
 ### 6.4 Failure handling, observability and human control
 

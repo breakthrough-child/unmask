@@ -1,92 +1,86 @@
 # Demo video script (≤ 5:00)
 
-Target length 4:30, leaving 30 s of slack. Record at 1080p. Screen + voice-over; face cam only in
-the intro. Times are cumulative. **[Bracketed]** = what's on screen. Fill `«…»` from
-`docs/results/results.md` after the final eval run, and say only numbers that are in it.
+Target length 4:30, leaving 30 s of slack. Record at 1080p. Screen + voice-over; face cam only in the intro.
+Times are cumulative. **[Bracketed]** = what's on screen. Every number below is in `docs/REPORT.md` /
+`docs/results/results.md`; **«name»** is the only thing to fill in. The story is deliberately honest: a working agentic
+system on AWS, and a detector that does **not** yet separate real from swapped callers on our small data set.
 
 ---
 
 ### 0:00 – 0:20 · Team intro
 **[Face cam, then title card "Unmask: is the face on your video call real?"]**
 
-> Hi, I'm «name» «and this is «teammate»». We built Unmask for the OpenCV AI Competition: an agent
-> that helps you check, during a live video call, whether the caller is a real-time face swap.
+> Hi, I'm «name» «and this is «teammate»». We built Unmask for the OpenCV AI Competition: an agent that helps you
+> check, during a video call, whether the caller might be a face swap. I'll show how it works, and I'll be straight
+> about where it doesn't work yet.
 
 ### 0:20 – 0:55 · Problem
-**[B-roll: news headlines about deepfake video-call scams (your own screenshots, cite sources on
-screen); then a phone ringing with a "family member" on video]**
+**[B-roll: news headlines about deepfake video-call scams (your own screenshots, cite sources on screen); then a phone
+ringing with a "family member" on video]**
 
-> Real-time face swaps now run on a gaming laptop. Scammers use them on WhatsApp and Zoom to
-> pose as family members, partners or bosses, then ask for money. Detecting a swap from a
-> single frame is hard. But a live swap has a weakness: it struggles when the real person
-> *moves*. Turn your head to profile, pass a hand in front of your face, or change the light,
-> and the fake starts to break. Unmask turns that into a guided check anyone can run.
+> Face-swap software now runs on ordinary laptops and plugs into WhatsApp or Zoom as a virtual camera. Scammers use it to
+> pose as relatives or bosses and ask for money. One frame of a good swap is hard to judge. But a swap has to cope when the
+> real person moves, so Unmask asks the caller to move: turn your head, pass a hand across your face, change the light.
 
-### 0:55 – 2:30 · Live demo catching a swap
-**[Split screen: left a WhatsApp Web / Meet call with a consenting teammate using an AI-generated
-face (state on screen: "swap uses an AI-generated face of no real person"); right the Unmask tab]**
+### 0:55 – 2:15 · Demo on the live site
+**[Browser at https://d2xv52l4vknsio.cloudfront.net; click "Analyse a recording"; a line on screen: "Samples are my own
+recordings; the swap uses an AI-generated face of no real person."]**
 
-1. **[Click "Share the call window", pick the call window, drag a box over the caller's tile]**
-   > I open Unmask next to the call and share the call window. I box the caller's video.
-2. **[Passive scan runs: 10 s countdown]**
-   > First, a ten-second passive scan. OpenCV 5 finds the face with the YuNet detector, tracks five
-   > landmarks, estimates head pose with solvePnP, and measures the seam around the face, its texture,
-   > and how stable it is from frame to frame.
-3. **[Prompt appears: "Say to the caller: Please turn your head slowly all the way to the left…" plus
-   the "Why:" line]**
-   > The seam score is borderline, so the agent asks for a head turn, and it says why. I read it out.
-4. **[Caller turns; 5 s recording; result]**
-   > At full profile, the swap breaks up: landmarks jump and detection flickers.
-5. **[Next prompt: hand pass]**
-   > Now the agent chooses a hand pass, because occlusion is the most uncertain signal left.
-6. **[Verdict card: HIGH_RISK / SUSPICIOUS, evidence frames with face box, seam band, red motion overlay]**
-   > Verdict: «HIGH RISK». The evidence frame shows the face being drawn *over* the hand. The advice is
-   > plain: don't send money, call them back on a number you already know.
-7. **[Quick cut: same flow with the teammate's real face → LOW_RISK]**
-   > Same check on the real person: low risk, in «N» challenges.
+1. **[Click "Real caller (recorded, daylight light)"; the agent session runs, ~30 s; jump-cut if needed]**
+   > This is a real recording of me. Unmask records a passive scan, then the agent, Amazon Nova Lite on Bedrock, chooses
+   > the next challenge and tells me why. Each clip goes through OpenCV 5 on Lambda: YuNet face detection, head pose
+   > with solvePnP, seam and texture measures, optical flow for the hand pass, lighting correlation.
+2. **[Verdict card: LOW RISK 32/100; scroll the timeline "saw → chose → why"; show an evidence frame]**
+   > It ends at low risk, with evidence frames and its decision trail.
+3. **[Click "Face-swapped caller (recorded, daylight light)"]**
+   > Now the same recording with my face replaced by an AI-generated face of no real person.
+4. **[Verdict card: LOW RISK 44/100]**
+   > And here is the honest part: it also says low risk. **Unmask does not catch this swap.** I'll show the numbers in a minute.
+5. **[Quick cut: "Check a live caller" → "Share the call window" → the large challenge prompt with countdown]**
+   > In live mode you share the call window and read the challenges out to the caller. Same pipeline, same verdict logic.
 
-### 2:30 – 3:15 · The agent and its trace
-**[Scroll the "What the agent saw, chose and why" timeline; then open AGENT_TRACE_EXAMPLE.json in an
-editor and highlight signals_after → decision across two steps]**
+### 2:15 – 3:00 · The agent and its trace
+**[AGENT_TRACE_EXAMPLE.json in an editor; highlight `signals_after` and `decision` for steps 1 and 3]**
 
-> This is the agentic part. After every clip, OpenCV's measurements become per-signal scores with an
-> uncertainty. The agent, Amazon Nova Lite on Bedrock with tool use, picks one action:
-> issue a challenge, ask for better conditions, or conclude. Here you can see the vision output
-> change the decision: after the head turn, seam and pose became decisive, so the next call switched to
-> hand_pass. If Bedrock fails or answers something invalid, a rule-based policy with the same logic
-> takes over, and that's logged too. The verdict itself never comes from the LLM. It comes from a
-> deterministic, versioned scorer. And the user stays in control: skip any challenge, stop any time,
-> delete the data.
+> This is the agentic part, and it's real. After each clip OpenCV's measurements become per-signal scores with an
+> uncertainty. In this session the seam signal was already clear after the passive scan, so the agent asked for a hand pass
+> first. In four of our six sessions the seam was still uncertain and it asked for a head turn first. After the head turn the
+> pose score was decisive, so it skipped the lighting test and stopped. The verdict never comes from the language model: a
+> deterministic scorer produces it, the model only chooses what to test next, and a rule-based policy takes over if
+> Bedrock fails. The user can skip any challenge or stop at any time, and everything is deleted within 24 hours.
 
-### 3:15 – 3:45 · Architecture
-**[docs/diagrams/architecture.svg, then the CloudWatch dashboard]**
+### 3:00 – 3:30 · Architecture
+**[docs/diagrams/architecture.png, then the CloudWatch dashboard]**
 
-> Everything runs on AWS from one SAM template: a static site on S3 and CloudFront; an HTTP API;
-> a Lambda container with OpenCV 5 and the YuNet model baked in; clips in a private, encrypted S3
-> bucket that deletes everything after a day; sessions and traces in DynamoDB with a 24-hour TTL.
-> A five-second clip analyses in about «X» seconds on Lambda. The dashboard tracks latency, verdicts,
-> the inconclusive rate and Bedrock fallbacks.
+> One SAM template: S3 and CloudFront for the site, an HTTP API, a Lambda container with OpenCV 5 and the YuNet model
+> baked in, clips in a private bucket that deletes everything after a day, sessions and traces in DynamoDB with a 24-hour
+> TTL. A warm clip analyses in 0.8 to 2.3 seconds on Lambda and each Nova Lite decision takes about 0.7 seconds. The first
+> clip after a fresh deploy took 8.5 seconds, so we added a keep-warm ping.
 
-### 3:45 – 4:25 · Results
-**[docs/results/ablation.png, then the per-challenge table]**
+### 3:30 – 4:25 · Results, honestly
+**[docs/results/ablation.png, then the per-session table from REPORT.md §6.1]**
 
-> We evaluated on «N» consenting participants, real and swapped, including clips recorded through real
-> calls, with thresholds fitted leave-one-participant-out. Passive analysis alone caught «a»% of swaps.
-> A fixed challenge sequence caught «b»%. Letting the agent choose caught «c»% with «d» challenges on
-> average, at a «e»% false-positive rate on real callers.
+> We evaluated on 24 clips: me, in three lighting sessions, real and swapped, with thresholds cross-validated
+> leave-one-session-out because there is only one participant. Passive-only, a fixed challenge sequence, and the agent
+> all flagged 2 of 3 swapped sessions **and** 2 of 3 real ones. In two of the three sessions the real clip actually scored a
+> *higher* risk than the swapped one. The agent reached the same verdicts as the fixed sequence with fewer challenges,
+> 2.67 instead of 3, so it saves effort but not accuracy. Digging into the features, the only consistent direction was that
+> the swapped face is smoother, in all three sessions, but the differences between lighting sessions are bigger than the
+> difference between real and swapped. Three sessions can't settle it either way.
 
-### 4:25 – 4:55 · Limitations & responsible use
-**[docs/results failure-case frame; RESPONSIBLE_USE bullets]**
+### 4:25 – 4:55 · Limitations, responsible use, what's next
+**[The three failure-case frames from REPORT.md §6.2; RESPONSIBLE_USE bullets]**
 
-> It isn't perfect. «Describe the main failure case, e.g. dim light on darker skin pushes clips to
-> INCONCLUSIVE.» Our participant pool is small, so treat it as a risk assessment, not proof. Unmask never
-> identifies anyone, keeps no face database, deletes clips in 24 hours, and says "inconclusive" when it
-> can't tell. Try it yourself: the link and the sample clips are on our Devpost page. Thanks!
+> So today Unmask is a working agentic framework, not a validated detector, and it can both miss a swap and raise a false
+> alarm on a real caller. The advice it gives is built for that: verify through a channel you trust. Next steps are more
+> people and skin tones, compressed through-a-call recordings, more swap tools, and features that compare within a session
+> instead of using absolute thresholds. Unmask never identifies anyone, keeps no face database and deletes clips in 24
+> hours. The link and the code are on our Devpost page. Thanks!
 
 ---
 
 **Recording checklist**
-- Use only consenting participants; the swap source face is AI-generated (show the on-screen note).
-- Do not show the face-swap tool's UI or name.
-- Hide notifications and personal chats; use a test WhatsApp/Meet account.
-- Check the final cut is ≤ 5:00.
+- Only the samples shipped on the site (the owner's own recordings); no one else's footage.
+- Do not show the face-swap tool's name or interface; say "an AI-generated face of no real person".
+- If a verdict on your take differs from the script, say what the screen shows.
+- Hide notifications and personal chats; check the final cut is ≤ 5:00.
