@@ -2,115 +2,195 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#0a1026">
   <title>Unmask: check a video caller</title>
-  <meta name="description" content="Check whether the person on your video call is a real-time face swap. Unmask gives a risk assessment, not proof.">
+  <meta name="description" content="Check whether the person on your video call might be a face swap. Unmask gives a risk check, not proof.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23123a6b'/%3E%3Cpath d='M8 14q8-7 16 0q-8 9-16 0z' fill='white'/%3E%3C/svg%3E">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236d28d9'/%3E%3Cstop offset='1' stop-color='%230e7490'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='40' height='40' rx='11' fill='url(%23g)'/%3E%3Cellipse cx='20' cy='20' rx='8' ry='10.5' fill='none' stroke='white' stroke-width='2.4'/%3E%3Cpath d='M6 20h28' stroke='%2367e8f9' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
+
 <header class="top">
-  <div class="wrap">
-    <div class="brand"><span class="logo" aria-hidden="true"></span> Unmask</div>
-    <p class="tag">Is the face on your video call real? Run a few quick checks before you trust it.</p>
+  <div class="wrap top-in">
+    <a class="brand" href="./" aria-label="Unmask home">
+      <svg class="logo" viewBox="0 0 40 40" width="44" height="44" role="img" aria-label="Unmask logo">
+        <defs>
+          <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6d28d9"/><stop offset="1" stop-color="#0e7490"/></linearGradient>
+        </defs>
+        <rect width="40" height="40" rx="11" fill="url(#lg)"/>
+        <ellipse cx="20" cy="20" rx="8" ry="10.5" fill="none" stroke="#fff" stroke-width="2.4"/>
+        <circle cx="16.6" cy="17" r="1.5" fill="#fff"/><circle cx="23.4" cy="17" r="1.5" fill="#fff"/>
+        <path d="M6 20h28" stroke="#67e8f9" stroke-width="2.6" stroke-linecap="round"/>
+      </svg>
+      <span class="brand-name">Unmask</span>
+    </a>
   </div>
 </header>
 
 <div class="disclaimer" role="note">
-  <div class="wrap"><strong>Risk assessment, not proof.</strong> Unmask can be wrong in both directions. It never ends calls,
-    contacts anyone, or identifies the caller. Clips are deleted within 24 hours.</div>
+  <div class="wrap"><strong>A risk check, not proof.</strong> Unmask can be wrong: it can miss a fake and it can raise a false alarm.
+    It never ends calls, contacts anyone, or identifies the caller. Clips are deleted within 24 hours.</div>
 </div>
 
 <main id="main" class="wrap">
-  <nav class="modes" role="tablist" aria-label="Mode">
-    <button role="tab" id="tab-live" aria-controls="panel-live" aria-selected="true">Check a live caller</button>
-    <button role="tab" id="tab-upload" aria-controls="panel-upload" aria-selected="false">Analyse a recording</button>
+  <section class="hero">
+    <h1>Is the face on your video call <span class="grad">real?</span></h1>
+    <p class="lead">Unmask asks the caller to do a few simple things on camera, checks how their face responds, and tells you how careful to be.</p>
+  </section>
+
+  <nav class="modes" role="tablist" aria-label="Choose how to check">
+    <button role="tab" id="tab-upload" aria-controls="panel-upload" aria-selected="true">Try a sample or upload</button>
+    <button role="tab" id="tab-live" aria-controls="panel-live" aria-selected="false">Check a live caller</button>
   </nav>
 
-  <!-- ============================== LIVE -->
-  <section id="panel-live" role="tabpanel" aria-labelledby="tab-live">
-    <ol class="howto">
-      <li>Open your call (WhatsApp Web, Meet, Zoom…) in another window or tab.</li>
-      <li>Press <b>Share the call window</b> and pick that window. Make the caller's video big.</li>
-      <li>Unmask records short clips and tells you what to ask the caller to do.</li>
-    </ol>
-    <p class="support" id="share-support"></p>
-    <div class="row">
-      <button class="primary big" id="btn-share">Share the call window</button>
-      <button id="btn-stop-share" hidden>Stop sharing</button>
-    </div>
-    <div class="live-grid" id="live-area" hidden>
-      <div class="preview">
-        <div class="preview-box" id="preview-box">
-          <video id="preview" muted playsinline></video>
-          <div id="crop-rect" class="crop-rect" hidden></div>
-        </div>
-        <p class="hint">Optional: drag on the preview to select just the caller's video tile. <button class="link" id="btn-clear-crop">Use whole window</button></p>
+  <!-- ============================== SAMPLES + UPLOAD -->
+  <section id="panel-upload" role="tabpanel" aria-labelledby="tab-upload">
+    <div class="grid2">
+      <div class="card">
+        <h2>Try a sample</h2>
+        <p class="muted">One tap runs a full check on a short recording.</p>
+        <div class="sample-list" id="sample-buttons"><span class="muted">Loading samples…</span></div>
       </div>
-      <div class="prompt-card" id="prompt-card" aria-live="polite">
-        <p class="eyebrow" id="prompt-step">Step 1 · Passive scan</p>
-        <p class="prompt" id="prompt-text">Keep the caller's video visible. We'll record 10 seconds without asking them anything.</p>
-        <p class="why" id="prompt-why"></p>
-        <div class="countdown" id="countdown" aria-live="assertive"></div>
-        <div class="row">
-          <button class="primary big" id="btn-record">Start recording</button>
-          <button id="btn-skip">Skip this check</button>
-          <button id="btn-finish">Stop and show result</button>
+      <form id="upload-form" class="card">
+        <h2>Or upload your own clips</h2>
+        <p class="muted">Add a recording of the call under <b>Passive</b>. If you also recorded the caller doing the requested actions, add those too. Unmask skips any you don't have.</p>
+        <div class="files">
+          <label class="file"><span>Passive / call recording</span><input type="file" accept="video/*" data-ch="passive"></label>
+          <label class="file"><span>Head turn</span><input type="file" accept="video/*" data-ch="head_turn"></label>
+          <label class="file"><span>Hand pass</span><input type="file" accept="video/*" data-ch="hand_pass"></label>
+          <label class="file"><span>Light change</span><input type="file" accept="video/*" data-ch="light_change"></label>
         </div>
-        <div class="progress" id="live-status" role="status"></div>
+        <button class="btn primary" type="submit" id="btn-analyse">Analyse these clips</button>
+        <p class="error-text" id="upload-error" role="alert"></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============================== LIVE -->
+  <section id="panel-live" role="tabpanel" aria-labelledby="tab-live" hidden>
+    <div class="card unavailable" id="live-unavailable" hidden>
+      <div class="icon-circle" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      </div>
+      <h2>Live checking needs a computer</h2>
+      <p id="live-unavailable-text">Sharing a call window only works in desktop Chrome or Edge, not on phones or tablets. You can still try the samples or upload a recording.</p>
+      <button class="btn" id="btn-to-upload" type="button">Go to samples and upload</button>
+    </div>
+    <div id="live-supported">
+      <div class="card">
+        <h2>Check a live caller</h2>
+        <ol class="howto">
+          <li>Open your call (WhatsApp Web, Meet, Zoom…) in another window or tab.</li>
+          <li>Press <b>Share the call window</b> and pick that window. Make the caller's video big.</li>
+          <li>Unmask records short clips and tells you what to ask the caller to do.</li>
+        </ol>
+        <p class="muted" id="share-support"></p>
+        <div class="row">
+          <button class="btn primary" id="btn-share" type="button">Share the call window</button>
+          <button class="btn" id="btn-stop-share" type="button" hidden>Stop sharing</button>
+        </div>
+      </div>
+      <div class="live-grid" id="live-area" hidden>
+        <div class="card preview">
+          <div class="preview-box" id="preview-box">
+            <video id="preview" muted playsinline></video>
+            <div id="crop-rect" class="crop-rect" hidden></div>
+          </div>
+          <p class="hint">Optional: drag on the preview to select just the caller's video tile. <button class="link" id="btn-clear-crop" type="button">Use whole window</button></p>
+        </div>
+        <div class="card prompt-card" id="prompt-card" aria-live="polite">
+          <p class="eyebrow" id="prompt-step">Step 1 · Passive scan</p>
+          <p class="prompt" id="prompt-text">Keep the caller's video visible. We'll record 10 seconds without asking them anything.</p>
+          <p class="why" id="prompt-why"></p>
+          <div class="countdown" id="countdown" aria-live="assertive"></div>
+          <div class="row">
+            <button class="btn primary" id="btn-record" type="button">Start recording</button>
+            <button class="btn" id="btn-skip" type="button">Skip this check</button>
+            <button class="btn" id="btn-finish" type="button">Stop and show result</button>
+          </div>
+          <p class="error-text" id="live-status" role="status"></p>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- ============================== UPLOAD -->
-  <section id="panel-upload" role="tabpanel" aria-labelledby="tab-upload" hidden>
-    <div class="samples">
-      <h2>Try a sample</h2>
-      <p class="muted">One click: each runs a full agent session on pre-recorded clips.</p>
-      <div class="row" id="sample-buttons"><span class="muted">Loading samples…</span></div>
-    </div>
-    <form id="upload-form" class="upload-form">
-      <h2>Or upload your own clips</h2>
-      <p class="muted">A short recording of the call goes in <b>Passive</b>. If you recorded the caller doing the challenges, add those too:
-        the agent asks for them in the order it chooses, and skips any you don't have.</p>
-      <div class="files">
-        <label>Passive / call recording <input type="file" accept="video/*" data-ch="passive"></label>
-        <label>Head turn <input type="file" accept="video/*" data-ch="head_turn"></label>
-        <label>Hand pass <input type="file" accept="video/*" data-ch="hand_pass"></label>
-        <label>Light change <input type="file" accept="video/*" data-ch="light_change"></label>
-      </div>
-      <button class="primary big" type="submit">Analyse</button>
-      <div class="progress" id="upload-status" role="status"></div>
-    </form>
+  <!-- ============================== PROGRESS -->
+  <section id="progress" class="card progress" hidden aria-live="polite" aria-busy="true">
+    <h2 id="progress-title">Running the check</h2>
+    <ol class="steps" id="progress-steps"></ol>
+    <p class="slow" id="progress-slow" hidden>Waking up the server — the first check can take up to 20 seconds.</p>
   </section>
 
   <!-- ============================== RESULTS -->
-  <section id="results" hidden aria-live="polite">
-    <div class="verdict" id="verdict">
-      <div class="verdict-label" id="verdict-label"></div>
-      <div class="meter" aria-hidden="true"><div class="meter-fill" id="meter-fill"></div></div>
-      <p class="risk" id="verdict-risk"></p>
-      <p class="advice" id="verdict-advice"></p>
-      <ul class="reasons" id="verdict-reasons"></ul>
+  <section id="results" hidden>
+    <div class="verdict" id="verdict" role="region" aria-labelledby="verdict-title" tabindex="-1">
+      <div class="verdict-icon" id="verdict-icon" aria-hidden="true"></div>
+      <div class="verdict-body">
+        <p class="eyebrow">Result of this check</p>
+        <h2 id="verdict-title"></h2>
+        <p class="verdict-sub" id="verdict-sub"></p>
+        <div class="meter-wrap" id="meter-wrap">
+          <div class="meter" id="meter" role="img" aria-label=""><span class="meter-marker" id="meter-marker"></span></div>
+          <div class="meter-labels" aria-hidden="true"><span>Lower</span><span>Higher</span></div>
+        </div>
+        <p class="meter-none" id="meter-none" hidden>There wasn't enough clear video to place this on the risk meter.</p>
+      </div>
     </div>
-    <h2>Evidence frames</h2>
-    <div class="evidence" id="evidence"></div>
-    <h2>Signals</h2>
-    <table class="signals"><thead><tr><th scope="col">Signal</th><th scope="col">Suspicion</th><th scope="col">Certainty</th></tr></thead>
-      <tbody id="signals"></tbody></table>
-    <h2>What the agent saw, chose and why</h2>
-    <ol class="timeline" id="timeline"></ol>
-    <div class="row">
-      <button id="btn-trace">Download decision trace (JSON)</button>
-      <button id="btn-delete" class="danger">Delete my clips now</button>
-      <button id="btn-again" class="primary">Check again</button>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>Why</h3>
+        <ul class="reasons" id="reasons"></ul>
+      </div>
+      <div class="card todo" id="todo">
+        <h3>What you should do</h3>
+        <ul id="todo-list"></ul>
+      </div>
+    </div>
+
+    <p class="honesty"><strong>Unmask is a risk check, not proof.</strong> It can miss a fake and it can raise a false alarm, so never rely on it alone.
+      It never ends your call, contacts anyone, or tells you who someone is.</p>
+
+    <div class="row actions">
+      <button class="btn primary" id="btn-again" type="button">Check again</button>
+      <button class="btn" id="btn-details" type="button" aria-expanded="false" aria-controls="detailed">Show technical details</button>
+    </div>
+
+    <div id="detailed" class="detailed" hidden>
+      <h2>Technical details</h2>
+      <p class="muted" id="tech-summary"></p>
+
+      <h3>Signals</h3>
+      <div class="table-wrap">
+        <table class="signals">
+          <thead><tr><th scope="col">Signal</th><th scope="col">Suspicion</th><th scope="col">Certainty</th></tr></thead>
+          <tbody id="signals"></tbody>
+        </table>
+      </div>
+
+      <h3>Evidence frames</h3>
+      <div class="evidence" id="evidence"></div>
+
+      <h3>What the agent saw, chose and why</h3>
+      <ol class="timeline" id="timeline"></ol>
+
+      <div class="row">
+        <button class="btn" id="btn-trace" type="button">Download decision trace (JSON)</button>
+        <button class="btn danger" id="btn-delete" type="button">Delete my clips now</button>
+      </div>
     </div>
   </section>
 </main>
 
 <footer class="wrap foot">
-  <p>Unmask · OpenCV 5 on AWS Lambda · agent on Amazon Bedrock. <a href="https://github.com/" id="repo-link">Source &amp; docs</a></p>
+  <p>Unmask · OpenCV 5 on AWS Lambda · agent on Amazon Bedrock · <a href="https://github.com/" id="repo-link">Source &amp; docs</a></p>
+  <p class="muted small">Your clips are processed in a private store and deleted within 24 hours. There is no face database and no identification.</p>
 </footer>
 <script src="config.js"></script>
 <script src="app.js"></script>
