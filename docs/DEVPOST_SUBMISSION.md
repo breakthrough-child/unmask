@@ -94,6 +94,10 @@ as a timeline and can be downloaded as JSON.
   patch fell outside the frame in 18 of 24 clips) showed the resolution hypothesis pointing the right way in 3 of 3 sessions (relative to
   the same person's neck, the swapped face has less fine detail than the real one), but still at chance for single-clip detection: between-session offsets
   are larger than the effect.
+- **A second pre-registered idea: self-referenced dropout.** To cancel between-session offsets we compared each clip with its own first second
+  during the hand pass and head turn (texture change, largest frame-to-frame texture jump, fraction of off-appearance frames). Criterion not met: the
+  best combined score reached balanced accuracy 0.75 overall but only 0.50 in the room-light session, and the "jump" feature pointed the *opposite* way
+  in all 6 pairs: the swapped face was more stable, not flickering between swapped and original looks. We changed nothing in the deployment.
 - **Evaluating with one person.** Leave-one-participant-out is impossible, so we used leave-one-session-out and say
   clearly that it overstates generalisation. Generating the swaps was its own detour: downloading the swap models over a
   slow connection would have taken ~8–16 h, so we ran the swap job in a temporary, private stack in our own AWS account
@@ -119,6 +123,8 @@ as a timeline and can be downloaded as JSON.
   detection, which stayed at 2/3 detection vs 2/3 false positives.
 - Within the same recording a swap is measurably different in consistent directions, so a *reference-based* check (compare against the
   same person in the same lighting) looks more promising than absolute thresholds, but we only have 3 sessions of one person.
+- Our "the swapper drops out under occlusion" hypothesis was wrong for this swap pipeline: during the challenges the swapped face was *more*
+  stable than the real one in all 6 recordings we compared.
 - A detector built on hand-picked artefact thresholds needs data from many people and conditions. Between-session
   variation swamped the real/swapped effect with only 3 sessions; paired, within-session features and a much larger and
   more varied data set are the obvious next step.

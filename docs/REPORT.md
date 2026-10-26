@@ -357,6 +357,49 @@ effect, so thresholds learned from two sessions do not transfer to the third. Th
 sessions, so "3 of 3 sessions with the same sign" happens by chance 1 time in 4. One participant, three sessions and one swap tool mean
 this neither proves the idea wrong nor right.
 
+### 6.6 Experiment 2: within-clip swap dropout (pre-registered; result: criterion not met)
+
+**Hypothesis.** During a hand pass or head turn the swapper drops out and the original face shows through, so *within one swapped clip* the face
+texture jumps between a smooth and a sharp look, while a real clip stays stable. Every quantity is measured against the same clip's own first second,
+so between-session offsets cancel. Pre-registered and committed before any value was computed (commit `18e3324`, "Experiment 2" in
+[PASSIVE_EXPERIMENT.md](PASSIVE_EXPERIMENT.md)); run once; results: [results/dropout_experiment.md](results/dropout_experiment.md).
+
+**Method.** The 12 `hand_pass` and `head_turn` clips (3 sessions × 2 challenges × {real, swapped} = 6 paired recordings), using *all* frames with a face
+detection (including partial occlusion and large yaw). Pre-challenge window = t < 1 s, challenge window = t ≥ 1 s. Features: `d_tex_change` (median
+face-vs-scene texture ratio `tex_lap_ratio` in the challenge window minus the pre window), `d_tex_maxjump` (largest frame-to-frame change of it in the
+challenge window), `d_out_frac` (fraction of challenge frames whose Lab/texture/high-frequency descriptor lies more than 3 z-units from the pre-window
+appearance). Hypothesised sign of (swapped − real): positive for all three.
+
+| Feature | Pairs with swapped > real (exact 95 % CI) | Median Δ (95 % bootstrap CI over the 6 pairs) | Session means (daylight / dim / room light) | Single-feature LOSO balanced accuracy |
+|---|---|---|---|---|
+| `d_tex_change` | **5/6** (36–100 %) | +0.078 (−0.036 to +0.128) | +0.054 / +0.113 / +0.004 | 0.50 |
+| `d_tex_maxjump` | **0/6** (0–46 %), the opposite sign | −0.161 (−0.370 to −0.039) | −0.112 / −0.370 / −0.088 | 0.58 |
+| `d_out_frac` | 2/6 (4–78 %) | −0.020 (−0.136 to +0.042) | −0.067 / −0.056 / +0.009 | 0.75 |
+
+Leave-one-session-out, clip level, set D (all three features, fitted with the existing rule, flagged if score ≥ 0.5): swapped flagged **4/6** (67 %,
+Wilson 30–90 %), real flagged **1/6** (17 %, 3–56 %), balanced accuracy 0.75, per held-out session 0.75 / 1.00 / **0.50** (daylight / dim / room light).
+
+**Pre-registered criterion: not met.** (1) was satisfied by `d_tex_change` alone (swapped > real in all 3 sessions and 5 of 6 pairs), but (2) required
+set D at ≥ 0.75 in **all three** held-out sessions, and the room-light session scored 0.50. So nothing was added to the scorer or the agent logic and
+**nothing in the deployment changed** (the v0 priors stay live; both samples still end LOW_RISK, 0.285 and 0.288). A floating-point bug in my success
+check (exactly 0.75 evaluated as below 0.75) was found after the run and fixed without re-measuring; it did not change the verdict (see the
+amendments in the pre-registration file). With three features tried, passing criterion 1 by luck alone is not negligible, which was stated up front.
+
+**What the data say.**
+1. **The "original shows through" hypothesis is not supported, and `d_tex_maxjump` points the other way.** In all 6 pairs the *real* clip has the larger
+   frame-to-frame texture jumps during the challenge (median Δ −0.16, bootstrap CI excluding 0). The swapped face is, if anything, *more stable* in
+   texture than the real one, which fits the consistently smoother swapped face seen earlier rather than a flicker between swapped and original looks.
+2. **`d_tex_change` leans the hypothesised way but is tiny.** The challenge window is slightly sharper than the pre window by +0.08 (log units) more in
+   swapped clips, in 3 of 3 sessions, but the interval for the median includes zero and as a stand-alone classifier it is at chance (0.50).
+3. **`d_out_frac` has no consistent direction** (2/6 pairs). That it reaches balanced accuracy 0.75 on its own in this tiny sample (4/6 vs 1/6, intervals
+   30–90 % and 3–56 %) is not meaningful given the inconsistent pair directions.
+4. **Caveats that make the test conservative or leave a loophole (hypotheses, not findings).** The measured response onset is ~0.6–0.7 s, so the "pre"
+   window already contains the start of the motion. And frames where a hand hides the face have no detection, so a dropout that coincides with a failed
+   detection is excluded from the analysis by construction.
+
+One participant, three sessions, six pairs, one swap pipeline: this neither proves the idea wrong nor right; it says this particular within-clip
+self-reference did not separate real from swapped here.
+
 ## 7. AWS deployment and reproducibility
 
 ```bash
@@ -378,8 +421,8 @@ file storage, so the app can be reviewed without an AWS account.
 ## 8. Limitations
 
 - **The detector does not work on the data we have (§6.1).** On one participant and one swap pipeline, detection and
-  false-positive rate are both 2/3 sessions, real clips scored *higher* risk than swapped ones in 2 of 3 sessions, and a
-  follow-up with four new families of passive signals (§6.5) did not improve it. The deployed thresholds are the hand-set v0 priors; the
+  false-positive rate are both 2/3 sessions, real clips scored *higher* risk than swapped ones in 2 of 3 sessions, and two
+  follow-ups (four new families of passive signals, §6.5; within-clip swap dropout, §6.6) did not improve it. The deployed thresholds are the hand-set v0 priors; the
   fitted `scoring_v1.json` (in-sample, no out-of-sample validation) is not deployed. Do not rely on Unmask's verdict for a
   real call; as shipped it is a demonstration of the agentic architecture, not a validated deepfake detector.
 - **Tiny, narrow sample.** 6 sessions of one person (three lighting conditions), one camera, one swap tool at default
@@ -400,7 +443,7 @@ file storage, so the app can be reviewed without an AWS account.
 
 ### What would make it better (not done)
 
-More participants (≥ 6) and sessions so leave-one-participant-out is possible; compressed through-a-call recordings;
+More participants (≥ 6) and sessions so leave-one-participant-out is possible (every follow-up so far has been limited by 3 sessions of one person); compressed through-a-call recordings;
 several swap tools and strengths; paired (within-session) features such as face-vs-scene sharpness rather than absolute
 thresholds, since between-session variation was larger than the real/swapped effect.
 

@@ -6,6 +6,7 @@ import time
 
 import cv2
 
+from . import dropout as DR
 from . import passive as PS
 from . import signals as S
 from .evidence import pick_evidence
@@ -15,7 +16,7 @@ from .video import Clip, load_clip
 
 CHALLENGES = ("passive", "head_turn", "hand_pass", "light_change")
 # Bump when signal code changes so cached eval features are recomputed.
-ANALYSIS_VERSION = "2026.10.26-passive1"
+ANALYSIS_VERSION = "2026.10.26-dropout1"
 
 _detector: FaceDetector | None = None
 
@@ -84,6 +85,8 @@ def analyze_clip(source: str | Clip, challenge: str = "passive", with_evidence: 
     # (research only: off in the deployed Lambda, where it would add latency without changing the verdict)
     if os.environ.get("UNMASK_PASSIVE_FEATURES") == "1":
         feats.update(PS.passive_features(clip.frames, faces, yaws, clip.times, occ_frac))
+    if os.environ.get("UNMASK_DROPOUT_FEATURES") == "1" and challenge in ("hand_pass", "head_turn"):
+        feats.update(DR.within_clip_dropout(clip.frames, faces, clip.times))   # research only (Experiment 2)
     if challenge != "passive":
         feats["response_latency_s"] = S.response_onset(challenge, clip.times, yaws, occ_frac, light)
     t_sig = time.perf_counter()

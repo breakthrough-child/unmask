@@ -1,0 +1,355 @@
+{
+  "per_feature": {
+    "d_tex_change": {
+      "pairs": [
+        {
+          "session": "daylight",
+          "challenge": "hand_pass",
+          "real": -0.0688,
+          "swapped": -0.043,
+          "d": 0.025800000000000003
+        },
+        {
+          "session": "daylight",
+          "challenge": "head_turn",
+          "real": -0.4973,
+          "swapped": -0.4156,
+          "d": 0.0817
+        },
+        {
+          "session": "dim",
+          "challenge": "hand_pass",
+          "real": 0.0607,
+          "swapped": 0.1347,
+          "d": 0.07399999999999998
+        },
+        {
+          "session": "dim",
+          "challenge": "head_turn",
+          "real": -0.5597,
+          "swapped": -0.4084,
+          "d": 0.1513
+        },
+        {
+          "session": "roomlight",
+          "challenge": "hand_pass",
+          "real": -0.2186,
+          "swapped": -0.1142,
+          "d": 0.10439999999999999
+        },
+        {
+          "session": "roomlight",
+          "challenge": "head_turn",
+          "real": -0.3214,
+          "swapped": -0.4183,
+          "d": -0.09689999999999999
+        }
+      ],
+      "n_pairs": 6,
+      "k_positive": 5,
+      "k_ci": [
+        0.3587654210023251,
+        0.9957892554855106
+      ],
+      "median_d": 0.07784999999999999,
+      "median_d_boot_ci": [
+        -0.03554999999999999,
+        0.12785
+      ],
+      "session_mean_d": {
+        "daylight": 0.05375,
+        "dim": 0.11264999999999999,
+        "roomlight": 0.0037500000000000033
+      },
+      "sessions_positive": 3,
+      "c1": true
+    },
+    "d_tex_maxjump": {
+      "pairs": [
+        {
+          "session": "daylight",
+          "challenge": "hand_pass",
+          "real": 1.3058,
+          "swapped": 1.1483,
+          "d": -0.15749999999999997
+        },
+        {
+          "session": "daylight",
+          "challenge": "head_turn",
+          "real": 0.6661,
+          "swapped": 0.5996,
+          "d": -0.0665
+        },
+        {
+          "session": "dim",
+          "challenge": "hand_pass",
+          "real": 1.1655,
+          "swapped": 0.7301,
+          "d": -0.4354
+        },
+        {
+          "session": "dim",
+          "challenge": "head_turn",
+          "real": 0.7552,
+          "swapped": 0.4502,
+          "d": -0.305
+        },
+        {
+          "session": "roomlight",
+          "challenge": "hand_pass",
+          "real": 1.1256,
+          "swapped": 0.9603,
+          "d": -0.1652999999999999
+        },
+        {
+          "session": "roomlight",
+          "challenge": "head_turn",
+          "real": 0.4235,
+          "swapped": 0.413,
+          "d": -0.01050000000000001
+        }
+      ],
+      "n_pairs": 6,
+      "k_positive": 0,
+      "k_ci": [
+        0.0,
+        0.4592581264399006
+      ],
+      "median_d": -0.16139999999999993,
+      "median_d_boot_ci": [
+        -0.3702,
+        -0.038500000000000006
+      ],
+      "session_mean_d": {
+        "daylight": -0.11199999999999999,
+        "dim": -0.3702,
+        "roomlight": -0.08789999999999995
+      },
+      "sessions_positive": 0,
+      "c1": false
+    },
+    "d_out_frac": {
+      "pairs": [
+        {
+          "session": "daylight",
+          "challenge": "hand_pass",
+          "real": 0.413,
+          "swapped": 0.4783,
+          "d": 0.06530000000000002
+        },
+        {
+          "session": "daylight",
+          "challenge": "head_turn",
+          "real": 0.2,
+          "swapped": 0.0,
+          "d": -0.2
+        },
+        {
+          "session": "dim",
+          "challenge": "hand_pass",
+          "real": 0.175,
+          "swapped": 0.1026,
+          "d": -0.07239999999999999
+        },
+        {
+          "session": "dim",
+          "challenge": "head_turn",
+          "real": 0.16,
+          "swapped": 0.12,
+          "d": -0.04000000000000001
+        },
+        {
+          "session": "roomlight",
+          "challenge": "hand_pass",
+          "real": 0.1556,
+          "swapped": 0.1739,
+          "d": 0.01830000000000001
+        },
+        {
+          "session": "roomlight",
+          "challenge": "head_turn",
+          "real": 0.0,
+          "swapped": 0.0,
+          "d": 0.0
+        }
+      ],
+      "n_pairs": 6,
+      "k_positive": 2,
+      "k_ci": [
+        0.0432718682927416,
+        0.7772219044964879
+      ],
+      "median_d": -0.020000000000000004,
+      "median_d_boot_ci": [
+        -0.1362,
+        0.04180000000000002
+      ],
+      "session_mean_d": {
+        "daylight": -0.06735,
+        "dim": -0.0562,
+        "roomlight": 0.009150000000000005
+      },
+      "sessions_positive": 1,
+      "c1": false
+    }
+  },
+  "set_D": {
+    "detection": 0.6666666666666666,
+    "detection_ci": [
+      0.29998832134152864,
+      0.9032306674407831
+    ],
+    "n_swapped": 6,
+    "tp": 4,
+    "false_alarm": 0.16666666666666666,
+    "false_alarm_ci": [
+      0.03005258587173032,
+      0.563509436563646
+    ],
+    "n_real": 6,
+    "fp": 1,
+    "balanced_accuracy": 0.7499999999999999,
+    "per_session": {
+      "daylight": {
+        "detection": 0.5,
+        "false_alarm": 0.0,
+        "balanced_accuracy": 0.75
+      },
+      "dim": {
+        "detection": 1.0,
+        "false_alarm": 0.0,
+        "balanced_accuracy": 1.0
+      },
+      "roomlight": {
+        "detection": 0.5,
+        "false_alarm": 0.5,
+        "balanced_accuracy": 0.5
+      }
+    },
+    "n_missing": 0
+  },
+  "single": {
+    "d_tex_change": {
+      "detection": 0.5,
+      "detection_ci": [
+        0.18761280689940868,
+        0.8123871931005913
+      ],
+      "n_swapped": 6,
+      "tp": 3,
+      "false_alarm": 0.5,
+      "false_alarm_ci": [
+        0.18761280689940868,
+        0.8123871931005913
+      ],
+      "n_real": 6,
+      "fp": 3,
+      "balanced_accuracy": 0.5,
+      "per_session": {
+        "daylight": {
+          "detection": 0.5,
+          "false_alarm": 0.5,
+          "balanced_accuracy": 0.5
+        },
+        "dim": {
+          "detection": 0.5,
+          "false_alarm": 0.5,
+          "balanced_accuracy": 0.5
+        },
+        "roomlight": {
+          "detection": 0.5,
+          "false_alarm": 0.5,
+          "balanced_accuracy": 0.5
+        }
+      },
+      "n_missing": 0
+    },
+    "d_tex_maxjump": {
+      "detection": 0.6666666666666666,
+      "detection_ci": [
+        0.29998832134152864,
+        0.9032306674407831
+      ],
+      "n_swapped": 6,
+      "tp": 4,
+      "false_alarm": 0.5,
+      "false_alarm_ci": [
+        0.18761280689940868,
+        0.8123871931005913
+      ],
+      "n_real": 6,
+      "fp": 3,
+      "balanced_accuracy": 0.5833333333333333,
+      "per_session": {
+        "daylight": {
+          "detection": 0.5,
+          "false_alarm": 0.5,
+          "balanced_accuracy": 0.5
+        },
+        "dim": {
+          "detection": 1.0,
+          "false_alarm": 0.5,
+          "balanced_accuracy": 0.75
+        },
+        "roomlight": {
+          "detection": 0.5,
+          "false_alarm": 0.5,
+          "balanced_accuracy": 0.5
+        }
+      },
+      "n_missing": 0
+    },
+    "d_out_frac": {
+      "detection": 0.6666666666666666,
+      "detection_ci": [
+        0.29998832134152864,
+        0.9032306674407831
+      ],
+      "n_swapped": 6,
+      "tp": 4,
+      "false_alarm": 0.16666666666666666,
+      "false_alarm_ci": [
+        0.03005258587173032,
+        0.563509436563646
+      ],
+      "n_real": 6,
+      "fp": 1,
+      "balanced_accuracy": 0.7499999999999999,
+      "per_session": {
+        "daylight": {
+          "detection": 0.5,
+          "false_alarm": 0.0,
+          "balanced_accuracy": 0.75
+        },
+        "dim": {
+          "detection": 1.0,
+          "false_alarm": 0.0,
+          "balanced_accuracy": 1.0
+        },
+        "roomlight": {
+          "detection": 0.5,
+          "false_alarm": 0.5,
+          "balanced_accuracy": 0.5
+        }
+      },
+      "n_missing": 0
+    }
+  },
+  "criterion": {
+    "c1_any_feature_all3_sessions_and_5of6": true,
+    "c1_by_feature": {
+      "d_tex_change": true,
+      "d_tex_maxjump": false,
+      "d_out_frac": false
+    },
+    "D_balanced_accuracy": 0.7499999999999999,
+    "c2_D_bal_acc_ge_0.75": true,
+    "D_per_session": {
+      "daylight": 0.75,
+      "dim": 1.0,
+      "roomlight": 0.5
+    },
+    "c2b_all_sessions_ge_0.75": false,
+    "met": false
+  }
+}

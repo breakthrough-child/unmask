@@ -69,7 +69,9 @@ recordings; the swap uses an AI-generated face of no real person."]**
 > difference between real and swapped. Three sessions can't settle it either way. We then wrote down four new families of passive signals
 > before looking, covering resolution, sensor noise, skin tone and dropout, and tested them leave-one-session-out. They did not help:
 > balanced accuracy 0.46 against 0.50 before, so we did not ship them. One lead: within the same recording, relative to the person's own neck the
-> swapped face carries less fine detail than the real one in all three sessions, so a reference-based check may work, but that is a hypothesis.
+> swapped face carries less fine detail than the real one in all three sessions, so a reference-based check may work, but that is a hypothesis. We also tested the idea that the swap flickers back to the original face during the hand pass and head turn: it
+> doesn't. In all six paired recordings the swapped face was *more* stable than the real one, and our best combined score only held up in two of the
+> three sessions. Nothing in the deployment changed.
 
 ### 4:25 – 4:55 · Limitations, responsible use, what's next
 **[The three failure-case frames from REPORT.md §6.2; RESPONSIBLE_USE bullets]**

@@ -24,7 +24,7 @@ OpenCV output decides the agent's next tool call.
 | Agent workflow | [docs/agent-workflow.md](docs/agent-workflow.md) |
 | Example decision trace | [docs/AGENT_TRACE_EXAMPLE.json](docs/AGENT_TRACE_EXAMPLE.json) |
 | Evaluation results | [docs/results/results.md](docs/results/results.md) (real recordings, leave-one-session-out) |
-| Passive-signal experiment | [docs/PASSIVE_EXPERIMENT.md](docs/PASSIVE_EXPERIMENT.md) (pre-registered) · [results](docs/results/passive_experiment.md) · [post-hoc variant](docs/results/passive_experiment_a1.md) |
+| Passive-signal experiments | [docs/PASSIVE_EXPERIMENT.md](docs/PASSIVE_EXPERIMENT.md) (both pre-registered) · [Exp. 1](docs/results/passive_experiment.md) · [Exp. 1 post-hoc variant](docs/results/passive_experiment_a1.md) · [Exp. 2: within-clip dropout](docs/results/dropout_experiment.md) |
 
 ## Results at a glance (honest)
 
@@ -45,7 +45,10 @@ the AWS deployment, observability and the 24 h deletion. The two one-click demo 
 sessions) both end LOW_RISK (0.285 and 0.288) under the deployed hand-set v0 priors: the live demo does **not** catch the swap.
 A follow-up pre-registered experiment with four new families of passive signals (resolution, sensor noise, skin tone, swap dropout; 13 features;
 [docs/PASSIVE_EXPERIMENT.md](docs/PASSIVE_EXPERIMENT.md)) also found **no improvement** (leave-one-session-out balanced accuracy 0.46
-vs 0.50 for the existing signals), so nothing new was deployed. Do not use the verdict as a real fraud check.
+vs 0.50 for the existing signals), so nothing new was deployed. A second pre-registered experiment (within-clip swap dropout during the hand pass and head turn,
+[results](docs/results/dropout_experiment.md)) also failed its criterion: set D scored 0.75 balanced accuracy overall but only 0.50 in the room-light
+session, and the "jumps" feature pointed the opposite way (swapped clips were *more* stable). Nothing in the deployment changed.
+Do not use the verdict as a real fraud check.
 
 ## Verified versions
 

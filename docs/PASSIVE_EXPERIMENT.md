@@ -153,4 +153,8 @@ Features are research-only (switched off in Lambda by default) unless the criter
 
 ## Amendments (Experiment 2)
 
-_(none yet)_
+- **Floating-point bug in the success check (found after the single run).** Set D's balanced accuracy is exactly 0.75 ((4/6 + 5/6)/2) but the
+  comparison `>= 0.75` evaluated to False (0.7499999…). Fixed with a 1e-9 tolerance and the report regenerated from the cached features
+  (deterministic, nothing re-measured). Effect on the outcome: criterion 2a is met, but criterion 2b (all three held-out sessions ≥ 0.75) is
+  not (room light 0.50) and neither is the overall criterion, so the verdict (**not met**) is unchanged. No feature definition, window,
+  threshold or analysis step was changed.
