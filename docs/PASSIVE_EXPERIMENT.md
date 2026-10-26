@@ -99,3 +99,58 @@ it is slid up to the lowest position that fits inside the frame, but not above y
 missing). Everything else, including the protocol and the success criterion, is identical. A1 is **exploratory**: it was chosen
 after looking at the data, so it can never count as confirmation and **does not trigger deployment**; only the pre-registered
 run decides that. A1 results are reported next to the pre-registered ones and labelled as post-hoc.
+
+---
+
+# Experiment 2: within-clip swap dropout during hand_pass and head_turn (pre-registration)
+
+**Written and committed before any Experiment-2 feature was computed.** Hard stop 16:45 Lagos on 2026-10-26. Same 24 recordings
+(only the 12 `hand_pass` + `head_turn` clips are used: 6 real, 6 swapped; 3 sessions × 2 challenges), one participant, no new data.
+Run **once**; nothing is tuned after seeing the result. Privacy rule unchanged.
+
+**Hypothesis.** During a hand pass or head turn the swapper drops out and the original face shows through, so *within a single swapped
+clip* the face appearance jumps between a smooth swapped look and a sharper original look, while a real clip stays stable. Because every
+quantity is measured **against the same clip's own pre-challenge frames**, between-session offsets (lighting, scene) cancel, which is what
+sank the absolute-threshold features in §6.1 and Experiment 1.
+
+**Frames.** *All* frames with a face detection (score ≥ 0.6, the pipeline's "present"), **including partial occlusion and large yaw**; no
+yaw or occlusion filter. Frames whose face patch does not fit in the frame are skipped for the descriptor only.
+**Windows (fixed):** pre-challenge = frames with t < 1.0 s from clip start; challenge = frames with t ≥ 1.0 s. A clip yields features only
+if it has ≥ 5 detected frames in the pre window and ≥ 10 in the challenge window. *Known caveat, stated in advance:* the measured response
+onset in these recordings is ~0.6–0.7 s (median `response_latency_s`), so the "pre" window can contain the start of the motion, which makes
+the test conservative; the window is not adjusted.
+
+**Per-frame quantities.** `tex_t` = log((Laplacian variance inside the face mask + 1) / (Laplacian variance of the background mask + 1)) of the
+grey frame, the same definition as the existing `tex_lap_ratio` but kept per frame (face mask = central ellipse 0.35·w × 0.35·h, background =
+outside 0.9·w × 1.0·h and not below the neck, as in `regions.frame_masks`). Descriptor `d_t` = [L, a, b medians of the central face region
+(Experiment-1 definition), `tex_t`, log HF power of the face patch F (Experiment-1 definition)].
+
+**Features (clip level, all defined here):**
+- `d_tex_change` = median(`tex_t`, challenge window) − median(`tex_t`, pre window). Hypothesised sign of (swapped − real): **+** (the original,
+  sharper face shows through).
+- `d_tex_maxjump` = max over consecutive detected frames in the challenge window of |`tex_t` − `tex_{t−1}`|. Hypothesised sign: **+**.
+- `d_out_frac` = fraction of challenge-window frames whose appearance lies outside the pre-challenge appearance: z-score of `d_t` against the
+  pre-window mean and standard deviation per dimension (standard deviation floored at 0.25 × the dimension's standard deviation over all
+  detected frames of the clip); a frame is outside if sqrt(mean of squared z) > 3.0. Hypothesised sign: **+**.
+No k-means is used here (the z-score option is the pre-registered one).
+
+**Analysis (fixed).**
+- Per pair (same recording, 6 pairs): d = swapped − real; report each d, the sign counts k/6 with exact (Clopper–Pearson) 95 % intervals,
+  the median d with a percentile-bootstrap 95 % interval over the 6 pairs (clustered by session in practice: only 3 sessions), and the
+  per-session mean of the two pairs (sign per session).
+- Leave-one-session-out, clip level (12 clips, 4 per held-out session): thresholds/direction/weights fitted on the other two sessions with the
+  existing rule (`tune.fit_config`), score = weighted mean of sigmoid scores of the three features (set **D**), flagged if ≥ 0.5; also each
+  feature alone. Report detection/false alarms with 95 % Wilson intervals (n = 6 per class) and per-session balanced accuracy.
+
+**Success criterion (all required; "separates in all 3 sessions").**
+1. at least one of the three features has the hypothesised sign in the session-mean difference of **all 3 sessions** and in ≥ 5 of the 6 pairs;
+2. set D leave-one-session-out balanced accuracy ≥ 0.75, with per-session balanced accuracy ≥ 0.75 in **all 3** held-out sessions.
+(With three features tried, passing both by chance is not negligible; this is stated up front and in the report.)
+
+**Consequences.** If met: add the signal to the scorer config and the agent's uncertainty logic, redeploy (`make remote-deploy`), run `make smoke`
+on both samples and check whether the live swapped sample is caught. If not met: **change nothing in the deployment**. Report and docs either way.
+Features are research-only (switched off in Lambda by default) unless the criterion is met.
+
+## Amendments (Experiment 2)
+
+_(none yet)_
