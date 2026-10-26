@@ -1,4 +1,4 @@
-# Passive-detection experiment: results
+# Passive-detection experiment: results (pre-registered)
 
 Protocol: [docs/PASSIVE_EXPERIMENT.md](../PASSIVE_EXPERIMENT.md) (pre-registered). **One participant, 3 lighting sessions, 24 clips**; leave-one-session-out; clip-level 95% Wilson intervals are optimistic (clips of a session are correlated).
 

@@ -1,6 +1,7 @@
 """analyze_clip(): run every OpenCV signal on one clip and return a JSON-able result."""
 from __future__ import annotations
 
+import os
 import time
 
 import cv2
@@ -80,7 +81,9 @@ def analyze_clip(source: str | Clip, challenge: str = "passive", with_evidence: 
         light = S.lighting_series(clip.frames, faces)
         feats.update(S.lighting_features(light))
     # passive signals (docs/PASSIVE_EXPERIMENT.md) on frontal, unoccluded frames of every clip
-    feats.update(PS.passive_features(clip.frames, faces, yaws, clip.times, occ_frac))
+    # (research only: off in the deployed Lambda, where it would add latency without changing the verdict)
+    if os.environ.get("UNMASK_PASSIVE_FEATURES") == "1":
+        feats.update(PS.passive_features(clip.frames, faces, yaws, clip.times, occ_frac))
     if challenge != "passive":
         feats["response_latency_s"] = S.response_onset(challenge, clip.times, yaws, occ_frac, light)
     t_sig = time.perf_counter()

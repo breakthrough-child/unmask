@@ -1,0 +1,1188 @@
+{
+  "per_feature": {
+    "seam_edge": {
+      "coverage": 24,
+      "n_pairs": 12,
+      "median_d": 0.0348,
+      "pos": 8,
+      "neg": 4,
+      "majority_sign": 1,
+      "consistent_pairs": 8,
+      "sessions_with_majority_sign": 2,
+      "n_sessions": 3,
+      "median_real": 0.6981999999999999,
+      "median_swapped": 0.7235,
+      "auc_pooled": 0.5625,
+      "hypothesised_sign": null
+    },
+    "seam_flicker": {
+      "coverage": 24,
+      "n_pairs": 12,
+      "median_d": 0.01579999999999998,
+      "pos": 8,
+      "neg": 4,
+      "majority_sign": 1,
+      "consistent_pairs": 8,
+      "sessions_with_majority_sign": 2,
+      "n_sessions": 3,
+      "median_real": 0.8513,
+      "median_swapped": 0.87675,
+      "auc_pooled": 0.5555555555555556,
+      "hypothesised_sign": null
+    },
+    "seam_edge_cv": {
+      "coverage": 24,
+      "n_pairs": 12,
+      "median_d": 0.002600000000000005,
+      "pos": 6,
+      "neg": 6,
+      "majority_sign": 1,
+      "consistent_pairs": 6,
+      "sessions_with_majority_sign": 2,
+      "n_sessions": 3,
+      "median_real": 0.13424999999999998,
+      "median_swapped": 0.13465,
+      "auc_pooled": 0.4791666666666667,
+      "hypothesised_sign": null
+    },
+    "tex_lap_ratio": {
+      "coverage": 24,
+      "n_pairs": 12,
+      "median_d": -0.6529,
+      "pos": 0,
+      "neg": 12,
+      "majority_sign": -1,
+      "consistent_pairs": 12,
+      "sessions_with_majority_sign": 3,
+      "n_sessions": 3,
+      "median_real": 0.15614999999999998,
+      "median_swapped": -0.58775,
+      "auc_pooled": 0.3055555555555556,
+      "hypothesised_sign": -1
+    },
+    "tex_hf_ratio": {
+      "coverage": 24,
+      "n_pairs": 12,
+      "median_d": -0.22725000000000012,
+      "pos": 1,
+      "neg": 11,
+      "majority_sign": -1,
+      "consistent_pairs": 11,
+      "sessions_with_majority_sign": 3,
+      "n_sessions": 3,
+      "median_real": 0.83345,
+      "median_swapped": 0.5748500000000001,
+      "auc_pooled": 0.3888888888888889,
+      "hypothesised_sign": null
+    },
+    "landmark_jitter": {
+      "coverage": 24,
+      "n_pairs": 12,
+      "median_d": -0.004899999999999998,
+      "pos": 2,
+      "neg": 10,
+      "majority_sign": -1,
+      "consistent_pairs": 10,
+      "sessions_with_majority_sign": 3,
+      "n_sessions": 3,
+      "median_real": 0.02735,
+      "median_swapped": 0.0264,
+      "auc_pooled": 0.4097222222222222,
+      "hypothesised_sign": null
+    },
+    "det_score_std": {
+      "coverage": 24,
+      "n_pairs": 12,
+      "median_d": -0.0010000000000000005,
+      "pos": 2,
+      "neg": 10,
+      "majority_sign": -1,
+      "consistent_pairs": 10,
+      "sessions_with_majority_sign": 3,
+      "n_sessions": 3,
+      "median_real": 0.01125,
+      "median_swapped": 0.00795,
+      "auc_pooled": 0.4479166666666667,
+      "hypothesised_sign": null
+    },
+    "p_res_pyr_neck": {
+      "coverage": 20,
+      "n_pairs": 10,
+      "median_d": -0.0708,
+      "pos": 1,
+      "neg": 9,
+      "majority_sign": -1,
+      "consistent_pairs": 9,
+      "sessions_with_majority_sign": 3,
+      "n_sessions": 3,
+      "median_real": -0.17565,
+      "median_swapped": -0.30085,
+      "auc_pooled": 0.35,
+      "hypothesised_sign": -1
+    },
+    "p_res_pyr_surround": {
+      "coverage": 22,
+      "n_pairs": 11,
+      "median_d": -0.06589999999999996,
+      "pos": 4,
+      "neg": 7,
+      "majority_sign": -1,
+      "consistent_pairs": 7,
+      "sessions_with_majority_sign": 2,
+      "n_sessions": 3,
+      "median_real": -0.8086,
+      "median_swapped": -0.8754,
+      "auc_pooled": 0.4628099173553719,
+      "hypothesised_sign": -1
+    },
+    "p_res_fft_neck": {
+      "coverage": 20,
+      "n_pairs": 10,
+      "median_d": -0.37195,
+      "pos": 2,
+      "neg": 8,
+      "majority_sign": -1,
+      "consistent_pairs": 8,
+      "sessions_with_majority_sign": 3,
+      "n_sessions": 3,
+      "median_real": 0.43110000000000004,
+      "median_swapped": 0.1679,
+      "auc_pooled": 0.38,
+      "hypothesised_sign": -1
+    },
+    "p_noise_face_vs_neck": {
+      "coverage": 20,
+      "n_pairs": 10,
+      "median_d": -0.09274999999999999,
+      "pos": 3,
+      "neg": 7,
+      "majority_sign": -1,
+      "consistent_pairs": 7,
+      "sessions_with_majority_sign": 2,
+      "n_sessions": 3,
+      "median_real": 0.42855,
+      "median_swapped": 0.32415000000000005,
+      "auc_pooled": 0.36,
+      "hypothesised_sign": -1
+    },
+    "p_noise_face_vs_bg": {
+      "coverage": 22,
+      "n_pairs": 11,
+      "median_d": -0.13959999999999995,
+      "pos": 3,
+      "neg": 8,
+      "majority_sign": -1,
+      "consistent_pairs": 8,
+      "sessions_with_majority_sign": 2,
+      "n_sessions": 3,
+      "median_real": 0.7115,
+      "median_swapped": 0.6306,
+      "auc_pooled": 0.4214876033057851,
+      "hypothesised_sign": -1
+    },
+    "p_noise_tvar_ratio": {
+      "coverage": 12,
+      "n_pairs": 6,
+      "median_d": 0.08820000000000003,
+      "pos": 4,
+      "neg": 2,
+      "majority_sign": 1,
+      "consistent_pairs": 4,
+      "sessions_with_majority_sign": 2,
+      "n_sessions": 3,
+      "median_real": 0.77215,
+      "median_swapped": 0.6331500000000001,
+      "auc_pooled": 0.5555555555555556,
+      "hypothesised_sign": null
+    },
+    "p_noise_tcorr_diff": {
+      "coverage": 16,
+      "n_pairs": 8,
+      "median_d": 0.014249999999999997,
+      "pos": 5,
+      "neg": 3,
+      "majority_sign": 1,
+      "consistent_pairs": 5,
+      "sessions_with_majority_sign": 1,
+      "n_sessions": 3,
+      "median_real": 0.1499,
+      "median_swapped": 0.1576,
+      "auc_pooled": 0.53125,
+      "hypothesised_sign": null
+    },
+    "p_skin_de_neck": {
+      "coverage": 20,
+      "n_pairs": 10,
+      "median_d": -1.0807500000000019,
+      "pos": 2,
+      "neg": 8,
+      "majority_sign": -1,
+      "consistent_pairs": 8,
+      "sessions_with_majority_sign": 3,
+      "n_sessions": 3,
+      "median_real": 28.6055,
+      "median_swapped": 26.6981,
+      "auc_pooled": 0.44,
+      "hypothesised_sign": 1
+    },
+    "p_skin_de_neck_ab": {
+      "coverage": 20,
+      "n_pairs": 10,
+      "median_d": 0.2756500000000002,
+      "pos": 5,
+      "neg": 5,
+      "majority_sign": 1,
+      "consistent_pairs": 5,
+      "sessions_with_majority_sign": 1,
+      "n_sessions": 3,
+      "median_real": 11.199349999999999,
+      "median_swapped": 11.59405,
+      "auc_pooled": 0.54,
+      "hypothesised_sign": 1
+    },
+    "p_skin_de_forehead_ab": {
+      "coverage": 22,
+      "n_pairs": 11,
+      "median_d": 0.20029999999999992,
+      "pos": 6,
+      "neg": 5,
+      "majority_sign": 1,
+      "consistent_pairs": 6,
+      "sessions_with_majority_sign": 2,
+      "n_sessions": 3,
+      "median_real": 4.4929,
+      "median_swapped": 5.9168,
+      "auc_pooled": 0.512396694214876,
+      "hypothesised_sign": 1
+    },
+    "p_drop_sep": {
+      "coverage": 14,
+      "n_pairs": 7,
+      "median_d": -0.1192000000000002,
+      "pos": 3,
+      "neg": 4,
+      "majority_sign": -1,
+      "consistent_pairs": 4,
+      "sessions_with_majority_sign": 2,
+      "n_sessions": 3,
+      "median_real": 3.5653,
+      "median_swapped": 3.6256,
+      "auc_pooled": 0.4897959183673469,
+      "hypothesised_sign": 1
+    },
+    "p_drop_minor_frac": {
+      "coverage": 14,
+      "n_pairs": 7,
+      "median_d": 0.0,
+      "pos": 3,
+      "neg": 1,
+      "majority_sign": 1,
+      "consistent_pairs": 3,
+      "sessions_with_majority_sign": 1,
+      "n_sessions": 3,
+      "median_real": 0.0667,
+      "median_swapped": 0.125,
+      "auc_pooled": 0.5408163265306123,
+      "hypothesised_sign": null
+    },
+    "p_drop_switch_rate": {
+      "coverage": 14,
+      "n_pairs": 7,
+      "median_d": 0.0,
+      "pos": 1,
+      "neg": 0,
+      "majority_sign": 1,
+      "consistent_pairs": 1,
+      "sessions_with_majority_sign": 0,
+      "n_sessions": 3,
+      "median_real": 0.1724,
+      "median_swapped": 0.1724,
+      "auc_pooled": 0.5306122448979592,
+      "hypothesised_sign": 1
+    },
+    "p_ctl_bg_noise": {
+      "coverage": 22,
+      "n_pairs": 11,
+      "median_d": 0.0041999999999999815,
+      "pos": 6,
+      "neg": 5,
+      "majority_sign": 1,
+      "consistent_pairs": 6,
+      "sessions_with_majority_sign": 1,
+      "n_sessions": 3,
+      "median_real": -0.9576,
+      "median_swapped": -0.9239,
+      "auc_pooled": 0.5454545454545454,
+      "hypothesised_sign": null
+    },
+    "p_ctl_bg_hf": {
+      "coverage": 22,
+      "n_pairs": 11,
+      "median_d": 0.02490000000000059,
+      "pos": 6,
+      "neg": 5,
+      "majority_sign": 1,
+      "consistent_pairs": 6,
+      "sessions_with_majority_sign": 2,
+      "n_sessions": 3,
+      "median_real": -3.3224,
+      "median_swapped": -3.3477,
+      "auc_pooled": 0.5206611570247934,
+      "hypothesised_sign": null
+    }
+  },
+  "single_feature_loso": {
+    "seam_edge": {
+      "detection": 0.5,
+      "detection_ci": [
+        0.2537781703934222,
+        0.7462218296065778
+      ],
+      "n_swapped": 12,
+      "tp": 6,
+      "false_alarm": 0.4166666666666667,
+      "false_alarm_ci": [
+        0.19325746190524656,
+        0.6804926643446272
+      ],
+      "n_real": 12,
+      "fp": 5,
+      "balanced_accuracy": 0.5416666666666666,
+      "per_session": {
+        "daylight": {
+          "detection": 1.0,
+          "false_alarm": 0.75,
+          "balanced_accuracy": 0.625
+        },
+        "dim": {
+          "detection": 0.25,
+          "false_alarm": 0.25,
+          "balanced_accuracy": 0.5
+        },
+        "roomlight": {
+          "detection": 0.25,
+          "false_alarm": 0.25,
+          "balanced_accuracy": 0.5
+        }
+      },
+      "n_missing": 0
+    },
+    "seam_flicker": {
+      "detection": 0.5833333333333334,
+      "detection_ci": [
+        0.3195073356553728,
+        0.8067425380947535
+      ],
+      "n_swapped": 12,
+      "tp": 7,
+      "false_alarm": 0.5,
+      "false_alarm_ci": [
+        0.2537781703934222,
+        0.7462218296065778
+      ],
+      "n_real": 12,
+      "fp": 6,
+      "balanced_accuracy": 0.5416666666666667,
+      "per_session": {
+        "daylight": {
+          "detection": 1.0,
+          "false_alarm": 1.0,
+          "balanced_accuracy": 0.5
+        },
+        "dim": {
+          "detection": 0.5,
+          "false_alarm": 0.5,
+          "balanced_accuracy": 0.5
+        },
+        "roomlight": {
+          "detection": 0.25,
+          "false_alarm": 0.0,
+          "balanced_accuracy": 0.625
+        }
+      },
+      "n_missing": 0
+    },
+    "seam_edge_cv": {
+      "detection": 0.4166666666666667,
+      "detection_ci": [
+        0.19325746190524656,
+        0.6804926643446272
+      ],
+      "n_swapped": 12,
+      "tp": 5,
+      "false_alarm": 0.4166666666666667,
+      "false_alarm_ci": [
+        0.19325746190524656,
+        0.6804926643446272
+      ],
+      "n_real": 12,
+      "fp": 5,
+      "balanced_accuracy": 0.5,
+      "per_session": {
+        "daylight": {
+          "detection": 0.25,
+          "false_alarm": 0.25,
+          "balanced_accuracy": 0.5
+        },
+        "dim": {
+          "detection": 0.5,
+          "false_alarm": 0.5,
+          "balanced_accuracy": 0.5
+        },
+        "roomlight": {
+          "detection": 0.5,
+          "false_alarm": 0.5,
+          "balanced_accuracy": 0.5
+        }
+      },
+      "n_missing": 0
+    },
+    "tex_lap_ratio": {
+      "detection": 0.6666666666666666,
+      "detection_ci": [
+        0.3906175873976139,
+        0.8618821601026385
+      ],
+      "n_swapped": 12,
+      "tp": 8,
+      "false_alarm": 0.5,
+      "false_alarm_ci": [
+        0.2537781703934222,
+        0.7462218296065778
+      ],
+      "n_real": 12,
+      "fp": 6,
+      "balanced_accuracy": 0.5833333333333333,
+      "per_session": {
+        "daylight": {
+          "detection": 0.75,
+          "false_alarm": 0.75,
+          "balanced_accuracy": 0.5
+        },
+        "dim": {
+          "detection": 0.25,
+          "false_alarm": 0.0,
+          "balanced_accuracy": 0.625
+        },
+        "roomlight": {
+          "detection": 1.0,
+          "false_alarm": 0.75,
+          "balanced_accuracy": 0.625
+        }
+      },
+      "n_missing": 0
+    },
+    "tex_hf_ratio": {
+      "detection": 0.3333333333333333,
+      "detection_ci": [
+        0.13811783989736134,
+        0.609382412602386
+      ],
+      "n_swapped": 12,
+      "tp": 4,
+      "false_alarm": 0.3333333333333333,
+      "false_alarm_ci": [
+        0.13811783989736134,
+        0.609382412602386
+      ],
+      "n_real": 12,
+      "fp": 4,
+      "balanced_accuracy": 0.5,
+      "per_session": {
+        "daylight": {
+          "detection": 1.0,
+          "false_alarm": 1.0,
+          "balanced_accuracy": 0.5
+        },
+        "dim": {
+          "detection": 0.0,
+          "false_alarm": 0.0,
+          "balanced_accuracy": 0.5
+        },
+        "roomlight": {
+          "detection": 0.0,
+          "false_alarm": 0.0,
+          "balanced_accuracy": 0.5
+        }
+      },
+      "n_missing": 0
+    },
+    "landmark_jitter": {
+      "detection": 0.4166666666666667,
+      "detection_ci": [
+        0.19325746190524656,
+        0.6804926643446272
+      ],
+      "n_swapped": 12,
+      "tp": 5,
+      "false_alarm": 0.5,
+      "false_alarm_ci": [
+        0.2537781703934222,
+        0.7462218296065778
+      ],
+      "n_real": 12,
+      "fp": 6,
+      "balanced_accuracy": 0.45833333333333337,
+      "per_session": {
+        "daylight": {
+          "detection": 0.0,
+          "false_alarm": 0.0,
+          "balanced_accuracy": 0.5
+        },
+        "dim": {
+          "detection": 0.25,
+          "false_alarm": 0.5,
+          "balanced_accuracy": 0.375
+        },
+        "roomlight": {
+          "detection": 1.0,
+          "false_alarm": 1.0,
+          "balanced_accuracy": 0.5
+        }
+      },
+      "n_missing": 0
+    },
+    "det_score_std": {
+      "detection": 0.5833333333333334,
+      "detection_ci": [
+        0.3195073356553728,
+        0.8067425380947535
+      ],
+      "n_swapped": 12,
+      "tp": 7,
+      "false_alarm": 0.4166666666666667,
+      "false_alarm_ci": [
+        0.19325746190524656,
+        0.6804926643446272
+      ],
+      "n_real": 12,
+      "fp": 5,
+      "balanced_accuracy": 0.5833333333333334,
+      "per_session": {
+        "daylight": {
+          "detection": 0.5,
+          "false_alarm": 0.25,
+          "balanced_accuracy": 0.625
+        },
+        "dim": {
+          "detection": 0.75,
+          "false_alarm": 0.5,
+          "balanced_accuracy": 0.625
+        },
+        "roomlight": {
+          "detection": 0.5,
+          "false_alarm": 0.5,
+          "balanced_accuracy": 0.5
+        }
+      },
+      "n_missing": 0
+    },
+    "p_res_pyr_neck": {
+      "detection": 0.6,
+      "detection_ci": [
+        0.3126695474501864,
+        0.8318224187964902
+      ],
+      "n_swapped": 10,
+      "tp": 6,
+      "false_alarm": 0.5,
+      "false_alarm_ci": [
+        0.23658959361548731,
+        0.7634104063845126
+      ],
+      "n_real": 10,
+      "fp": 5,
+      "balanced_accuracy": 0.55,
+      "per_session": {
+        "daylight": {
+          "detection": 0.0,
+          "false_alarm": 0.0,
+          "balanced_accuracy": 0.5
+        },
+        "dim": {
+          "detection": 1.0,
+          "false_alarm": 0.6666666666666666,
+          "balanced_accuracy": 0.6666666666666667
+        },
+        "roomlight": {
+          "detection": 1.0,
+          "false_alarm": 1.0,
+          "balanced_accuracy": 0.5
+        }
+      },
+      "n_missing": 4
+    },
+    "p_res_pyr_surround": {
+      "detection": 0.8181818181818182,
+      "detection_ci": [
+        0.5230138624217553,
+        0.9486333993289995
+      ],
+      "n_swapped": 11,
+      "tp": 9,
+      "false_alarm": 0.8181818181818182,
+      "false_alarm_ci": [
+        0.5230138624217553,
+        0.9486333993289995
+      ],
+      "n_real": 11,
+      "fp": 9,
+      "balanced_accuracy": 0.5,
+      "per_session": {
+        "daylight": {
+          "detection": 1.0,
+          "false_alarm": 1.0,
+          "balanced_accuracy": 0.5
+        },
+        "dim": {
+          "detection": 0.75,
+          "false_alarm": 0.75,
+          "balanced_accuracy": 0.5
+        },
+        "roomlight": {
+          "detection": 0.6666666666666666,
+          "false_alarm": 0.6666666666666666,
+          "balanced_accuracy": 0.49999999999999994
+        }
+      },
+      "n_missing": 2
+    },
+    "p_res_fft_neck": {
+      "detection": 0.6,
+      "detection_ci": [
+        0.3126695474501864,
+        0.8318224187964902
+      ],
+      "n_swapped": 10,
+      "tp": 6,
+      "false_alarm": 0.6,
+      "false_alarm_ci": [
+        0.3126695474501864,
+        0.8318224187964902
+      ],
+      "n_real": 10,
+      "fp": 6,
+      "balanced_accuracy": 0.5,
+      "per_session": {
+        "daylight": {
+          "detection": 0.0,
+          "false_alarm": 0.0,
+          "balanced_accuracy": 0.5
+        },
+        "dim": {
+          "detection": 1.0,
+          "false_alarm": 1.0,
+          "balanced_accuracy": 0.5
+        },
+        "roomlight": {
+          "detection": 1.0,
+          "false_alarm": 1.0,
+          "balanced_accuracy": 0.5
+        }
+      },
+      "n_missing": 4
+    },
+    "p_noise_face_vs_neck": {
+      "detection": 0.9,
+      "detection_ci": [
+        0.5958436145024278,
+        0.9821242504842788
+      ],
+      "n_swapped": 10,
+      "tp": 9,
+      "false_alarm": 0.8,
+      "false_alarm_ci": [
+        0.49015684672072335,
+        0.9433190520193067
+      ],
+      "n_real": 10,
+      "fp": 8,
+      "balanced_accuracy": 0.5499999999999999,
+      "per_session": {
+        "daylight": {
+          "detection": 0.75,
+          "false_alarm": 1.0,
+          "balanced_accuracy": 0.375
+        },
+        "dim": {
+          "detection": 1.0,
+          "false_alarm": 0.3333333333333333,
+          "balanced_accuracy": 0.8333333333333334
+        },
+        "roomlight": {
+          "detection": 1.0,
+          "false_alarm": 1.0,
+          "balanced_accuracy": 0.5
+        }
+      },
+      "n_missing": 4
+    },
+    "p_noise_face_vs_bg": {
+      "detection": 0.6363636363636364,
+      "detection_ci": [
+        0.35379677689163724,
+        0.8483377638586862
+      ],
+      "n_swapped": 11,
+      "tp": 7,
+      "false_alarm": 0.6363636363636364,
+      "false_alarm_ci": [
+        0.35379677689163724,
+        0.8483377638586862
+      ],
+      "n_real": 11,
+      "fp": 7,
+      "balanced_accuracy": 0.49999999999999994,
+      "per_session": {
+        "daylight": {
+          "detection": 0.0,
+          "false_alarm": 0.0,
+          "balanced_accuracy": 0.5
+        },
+        "dim": {
+          "detection": 1.0,
+          "false_alarm": 1.0,
+          "balanced_accuracy": 0.5
+        },
+        "roomlight": {
+          "detection": 1.0,
+          "false_alarm": 1.0,
+          "balanced_accuracy": 0.5
+        }
+      },
+      "n_missing": 2
+    },
+    "p_noise_tvar_ratio": {
+      "detection": 0.8333333333333334,
+      "detection_ci": [
+        0.43649056343635395,
+        0.9699474141282697
+      ],
+      "n_swapped": 6,
+      "tp": 5,
+      "false_alarm": 0.8333333333333334,
+      "false_alarm_ci": [
+        0.43649056343635395,
+        0.9699474141282697
+      ],
+      "n_real": 6,
+      "fp": 5,
+      "balanced_accuracy": 0.5,
+      "per_session": {
+        "daylight": {
+          "detection": 1.0,
+          "false_alarm": 0.6666666666666666,
+          "balanced_accuracy": 0.6666666666666667
+        },
+        "dim": {
+          "detection": 0.0,
+          "false_alarm": 1.0,
+          "balanced_accuracy": 0.0
+        },
+        "roomlight": {
+          "detection": 1.0,
+          "false_alarm": 1.0,
+          "balanced_accuracy": 0.5
+        }
+      },
+      "n_missing": 12
+    },
+    "p_noise_tcorr_diff": {
+      "detection": 0.5,
+      "detection_ci": [
+        0.21521252682444186,
+        0.7847874731755582
+      ],
+      "n_swapped": 8,
+      "tp": 4,
+      "false_alarm": 0.5,
+      "false_alarm_ci": [
+        0.21521252682444186,
+        0.7847874731755582
+      ],
+      "n_real": 8,
+      "fp": 4,
+      "balanced_accuracy": 0.5,
+      "per_session": {
+        "daylight": {
+          "detection": 0.0,
+          "false_alarm": 0.0,
+          "balanced_accuracy": 0.5
+        },
+        "dim": {
+          "detection": 0.5,
+          "false_alarm": 0.5,
+          "balanced_accuracy": 0.5
+        },
+        "roomlight": {
+          "detection": 1.0,
+          "false_alarm": 1.0,
+          "balanced_accuracy": 0.5
+        }
+      },
+      "n_missing": 8
+    },
+    "p_skin_de_neck": {
+      "detection": 0.5,
+      "detection_ci": [
+        0.23658959361548731,
+        0.7634104063845126
+      ],
+      "n_swapped": 10,
+      "tp": 5,
+      "false_alarm": 0.4,
+      "false_alarm_ci": [
+        0.16817758120350967,
+        0.6873304525498135
+      ],
+      "n_real": 10,
+      "fp": 4,
+      "balanced_accuracy": 0.55,
+      "per_session": {
+        "daylight": {
+          "detection": 0.0,
+          "false_alarm": 0.0,
+          "balanced_accuracy": 0.5
+        },
+        "dim": {
+          "detection": 0.6666666666666666,
+          "false_alarm": 0.6666666666666666,
+          "balanced_accuracy": 0.49999999999999994
+        },
+        "roomlight": {
+          "detection": 1.0,
+          "false_alarm": 0.6666666666666666,
+          "balanced_accuracy": 0.6666666666666667
+        }
+      },
+      "n_missing": 4
+    },
+    "p_skin_de_neck_ab": {
+      "detection": 0.8,
+      "detection_ci": [
+        0.49015684672072335,
+        0.9433190520193067
+      ],
+      "n_swapped": 10,
+      "tp": 8,
+      "false_alarm": 0.8,
+      "false_alarm_ci": [
+        0.49015684672072335,
+        0.9433190520193067
+      ],
+      "n_real": 10,
+      "fp": 8,
+      "balanced_accuracy": 0.5,
+      "per_session": {
+        "daylight": {
+          "detection": 1.0,
+          "false_alarm": 1.0,
+          "balanced_accuracy": 0.5
+        },
+        "dim": {
+          "detection": 0.3333333333333333,
+          "false_alarm": 0.3333333333333333,
+          "balanced_accuracy": 0.5
+        },
+        "roomlight": {
+          "detection": 1.0,
+          "false_alarm": 1.0,
+          "balanced_accuracy": 0.5
+        }
+      },
+      "n_missing": 4
+    },
+    "p_skin_de_forehead_ab": {
+      "detection": 1.0,
+      "detection_ci": [
+        0.7411599827511859,
+        1.0
+      ],
+      "n_swapped": 11,
+      "tp": 11,
+      "false_alarm": 1.0,
+      "false_alarm_ci": [
+        0.7411599827511859,
+        1.0
+      ],
+      "n_real": 11,
+      "fp": 11,
+      "balanced_accuracy": 0.5,
+      "per_session": {
+        "daylight": {
+          "detection": 1.0,
+          "false_alarm": 1.0,
+          "balanced_accuracy": 0.5
+        },
+        "dim": {
+          "detection": 1.0,
+          "false_alarm": 1.0,
+          "balanced_accuracy": 0.5
+        },
+        "roomlight": {
+          "detection": 1.0,
+          "false_alarm": 1.0,
+          "balanced_accuracy": 0.5
+        }
+      },
+      "n_missing": 2
+    },
+    "p_drop_sep": {
+      "detection": 0.14285714285714285,
+      "detection_ci": [
+        0.02567895594897479,
+        0.51313450331903
+      ],
+      "n_swapped": 7,
+      "tp": 1,
+      "false_alarm": 0.42857142857142855,
+      "false_alarm_ci": [
+        0.15821692226262685,
+        0.7495457695909742
+      ],
+      "n_real": 7,
+      "fp": 3,
+      "balanced_accuracy": 0.3571428571428571,
+      "per_session": {
+        "daylight": {
+          "detection": 0.0,
+          "false_alarm": 0.3333333333333333,
+          "balanced_accuracy": 0.33333333333333337
+        },
+        "dim": {
+          "detection": 0.5,
+          "false_alarm": 0.5,
+          "balanced_accuracy": 0.5
+        },
+        "roomlight": {
+          "detection": 0.0,
+          "false_alarm": 0.5,
+          "balanced_accuracy": 0.25
+        }
+      },
+      "n_missing": 10
+    },
+    "p_drop_minor_frac": {
+      "detection": 0.2857142857142857,
+      "detection_ci": [
+        0.0822171657090155,
+        0.6410709098517873
+      ],
+      "n_swapped": 7,
+      "tp": 2,
+      "false_alarm": 0.42857142857142855,
+      "false_alarm_ci": [
+        0.15821692226262685,
+        0.7495457695909742
+      ],
+      "n_real": 7,
+      "fp": 3,
+      "balanced_accuracy": 0.4285714285714285,
+      "per_session": {
+        "daylight": {
+          "detection": 0.0,
+          "false_alarm": 0.3333333333333333,
+          "balanced_accuracy": 0.33333333333333337
+        },
+        "dim": {
+          "detection": 0.5,
+          "false_alarm": 0.5,
+          "balanced_accuracy": 0.5
+        },
+        "roomlight": {
+          "detection": 0.5,
+          "false_alarm": 0.5,
+          "balanced_accuracy": 0.5
+        }
+      },
+      "n_missing": 10
+    },
+    "p_drop_switch_rate": {
+      "detection": 0.42857142857142855,
+      "detection_ci": [
+        0.15821692226262685,
+        0.7495457695909742
+      ],
+      "n_swapped": 7,
+      "tp": 3,
+      "false_alarm": 0.2857142857142857,
+      "false_alarm_ci": [
+        0.0822171657090155,
+        0.6410709098517873
+      ],
+      "n_real": 7,
+      "fp": 2,
+      "balanced_accuracy": 0.5714285714285714,
+      "per_session": {
+        "daylight": {
+          "detection": 0.3333333333333333,
+          "false_alarm": 0.0,
+          "balanced_accuracy": 0.6666666666666666
+        },
+        "dim": {
+          "detection": 0.5,
+          "false_alarm": 0.5,
+          "balanced_accuracy": 0.5
+        },
+        "roomlight": {
+          "detection": 0.5,
+          "false_alarm": 0.5,
+          "balanced_accuracy": 0.5
+        }
+      },
+      "n_missing": 10
+    }
+  },
+  "sets": {
+    "T": {
+      "detection": 0.6666666666666666,
+      "detection_ci": [
+        0.3906175873976139,
+        0.8618821601026385
+      ],
+      "n_swapped": 12,
+      "tp": 8,
+      "false_alarm": 0.5,
+      "false_alarm_ci": [
+        0.2537781703934222,
+        0.7462218296065778
+      ],
+      "n_real": 12,
+      "fp": 6,
+      "balanced_accuracy": 0.5833333333333333,
+      "per_session": {
+        "daylight": {
+          "detection": 0.75,
+          "false_alarm": 0.75,
+          "balanced_accuracy": 0.5
+        },
+        "dim": {
+          "detection": 0.25,
+          "false_alarm": 0.0,
+          "balanced_accuracy": 0.625
+        },
+        "roomlight": {
+          "detection": 1.0,
+          "false_alarm": 0.75,
+          "balanced_accuracy": 0.625
+        }
+      },
+      "n_missing": 0
+    },
+    "B": {
+      "detection": 0.5,
+      "detection_ci": [
+        0.2537781703934222,
+        0.7462218296065778
+      ],
+      "n_swapped": 12,
+      "tp": 6,
+      "false_alarm": 0.5,
+      "false_alarm_ci": [
+        0.2537781703934222,
+        0.7462218296065778
+      ],
+      "n_real": 12,
+      "fp": 6,
+      "balanced_accuracy": 0.5,
+      "per_session": {
+        "daylight": {
+          "detection": 0.75,
+          "false_alarm": 0.75,
+          "balanced_accuracy": 0.5
+        },
+        "dim": {
+          "detection": 0.0,
+          "false_alarm": 0.0,
+          "balanced_accuracy": 0.5
+        },
+        "roomlight": {
+          "detection": 0.75,
+          "false_alarm": 0.75,
+          "balanced_accuracy": 0.5
+        }
+      },
+      "n_missing": 0
+    },
+    "N": {
+      "detection": 0.6363636363636364,
+      "detection_ci": [
+        0.35379677689163724,
+        0.8483377638586862
+      ],
+      "n_swapped": 11,
+      "tp": 7,
+      "false_alarm": 0.6363636363636364,
+      "false_alarm_ci": [
+        0.35379677689163724,
+        0.8483377638586862
+      ],
+      "n_real": 11,
+      "fp": 7,
+      "balanced_accuracy": 0.49999999999999994,
+      "per_session": {
+        "daylight": {
+          "detection": 0.0,
+          "false_alarm": 0.0,
+          "balanced_accuracy": 0.5
+        },
+        "dim": {
+          "detection": 1.0,
+          "false_alarm": 1.0,
+          "balanced_accuracy": 0.5
+        },
+        "roomlight": {
+          "detection": 1.0,
+          "false_alarm": 1.0,
+          "balanced_accuracy": 0.5
+        }
+      },
+      "n_missing": 2
+    },
+    "C": {
+      "detection": 0.9166666666666666,
+      "detection_ci": [
+        0.6461140782014047,
+        0.9851352905492264
+      ],
+      "n_swapped": 12,
+      "tp": 11,
+      "false_alarm": 0.9166666666666666,
+      "false_alarm_ci": [
+        0.6461140782014047,
+        0.9851352905492264
+      ],
+      "n_real": 12,
+      "fp": 11,
+      "balanced_accuracy": 0.49999999999999994,
+      "per_session": {
+        "daylight": {
+          "detection": 0.75,
+          "false_alarm": 0.75,
+          "balanced_accuracy": 0.5
+        },
+        "dim": {
+          "detection": 1.0,
+          "false_alarm": 1.0,
+          "balanced_accuracy": 0.5
+        },
+        "roomlight": {
+          "detection": 1.0,
+          "false_alarm": 1.0,
+          "balanced_accuracy": 0.5
+        }
+      },
+      "n_missing": 0
+    }
+  },
+  "criterion": {
+    "bal_acc_C": 0.49999999999999994,
+    "c1_bal_acc_ge_0.75": false,
+    "sessions_ge_0.75": 0,
+    "c2_two_of_three_sessions": false,
+    "bal_acc_B": 0.5,
+    "c3_beats_baseline_by_0.10": false,
+    "improved": false
+  },
+  "coverage_note": "clips with the feature (of 24)"
+}

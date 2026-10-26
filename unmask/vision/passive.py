@@ -5,6 +5,8 @@ Everything compares patches of the same pixel size taken from the same frame (sa
 Definitions were fixed before any result was computed; see the pre-registration for the rationale."""
 from __future__ import annotations
 
+import os
+
 import cv2
 import numpy as np
 
@@ -29,6 +31,21 @@ CONTROLS = ("p_ctl_bg_noise", "p_ctl_bg_hf")
 
 def patch_size(face_w: float) -> int:
     return int(min(64, max(24, round(0.30 * face_w))))
+
+
+def neck_fit_enabled() -> bool:
+    """Post-hoc variant A1 (docs/PASSIVE_EXPERIMENT.md); default off = the pre-registered geometry. Read at call time."""
+    return os.environ.get("UNMASK_PASSIVE_NECK_FIT") == "1"
+
+
+def neck_cy(y: float, h: float, s: int, frame_h: int, fit: bool) -> float | None:
+    """Neck-patch centre row. Pre-registered: y + 1.18*h. Variant A1 (post-hoc, UNMASK_PASSIVE_NECK_FIT=1): slide up to the lowest
+    position that fits in the frame, but not above y0 >= y + 0.9*h."""
+    cy = y + 1.18 * h
+    if not fit:
+        return cy
+    cy = min(cy, frame_h - s / 2)
+    return cy if cy - s / 2 >= y + 0.9 * h else None
 
 
 def crop(img: np.ndarray, cx: float, cy: float, s: int) -> np.ndarray | None:
@@ -127,6 +144,7 @@ def kmeans_dropout(desc: np.ndarray, duration_s: float) -> tuple[float, float, f
 def passive_features(frames, faces, yaws, times, occ_frac=None) -> dict:
     """Clip-level passive features (None when a feature cannot be measured on enough eligible frames)."""
     out: dict = {k: None for k in FEATURES + CONTROLS}
+    fit_neck = neck_fit_enabled()
     elig = []
     for i, (f, fc) in enumerate(zip(frames, faces)):
         if fc is None or fc.score < MIN_SCORE or yaws[i] is None or abs(yaws[i]) > MAX_YAW:
@@ -149,7 +167,8 @@ def passive_features(frames, faces, yaws, times, occ_frac=None) -> dict:
         pf = crop(gray, cx, cy + 0.10 * h, s)
         if pf is None:
             continue
-        pn = crop(gray, cx, y + 1.18 * h, s)
+        ncy = neck_cy(y, h, s, gray.shape[0], fit_neck)
+        pn = crop(gray, cx, ncy, s) if ncy is not None else None
         ps = [q for q in (crop(gray, cx - 0.75 * w, cy, s), crop(gray, cx + 0.75 * w, cy, s)) if q is not None]
         corners = [gray[:s, :s], gray[:s, -s:], gray[-s:, :s], gray[-s:, -s:]]
         r = {"i": i}
@@ -215,8 +234,11 @@ def passive_features(frames, faces, yaws, times, occ_frac=None) -> dict:
         yb = fb.box[1]
         hb = fb.box[3]
         pa, pb = crop(ga, cx, cy + 0.10 * hb, s), crop(gb, cx, cy + 0.10 * hb, s)
-        na, nb = crop(ga, cx, yb + 1.18 * hb, s), crop(gb, cx, yb + 1.18 * hb, s)
-        if pa is None or na is None:
+        ncy = neck_cy(yb, hb, s, ga.shape[0], fit_neck)
+        if ncy is None:
+            continue
+        na, nb = crop(ga, cx, ncy, s), crop(gb, cx, ncy, s)
+        if pa is None or na is None or nb is None:
             continue
         c1, c2 = _corr(residual(pa), residual(pb)), _corr(residual(na), residual(nb))
         if c1 is not None and c2 is not None:

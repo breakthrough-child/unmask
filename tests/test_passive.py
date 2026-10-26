@@ -77,7 +77,21 @@ def test_too_few_eligible_frames_gives_no_features():
     assert out["p_n_eligible"] == 5 and all(out[k] is None for k in P.FEATURES)
 
 
-def test_ineligible_frames_are_excluded(synth_clip):
+def test_passive_features_are_off_by_default(synth_clip, monkeypatch):
+    monkeypatch.delenv("UNMASK_PASSIVE_FEATURES", raising=False)
+    clip, det = synth_clip(0, "passive", False)
+    assert "p_n_eligible" not in analyze_clip(clip, "passive", detector=det, with_evidence=False)["features"]
+
+
+def test_neck_patch_geometry():
+    assert P.neck_cy(100, 150, 40, 480, fit=False) == 100 + 1.18 * 150        # pre-registered: no adjustment
+    assert P.neck_cy(100, 150, 40, 480, fit=True) == 100 + 1.18 * 150          # already fits -> unchanged
+    assert abs(P.neck_cy(300, 150, 40, 480, fit=True) - 460) < 1e-9            # slid up to fit the frame
+    assert P.neck_cy(330, 150, 40, 480, fit=True) is None                      # would start above the chin line
+
+
+def test_ineligible_frames_are_excluded(synth_clip, monkeypatch):
+    monkeypatch.setenv("UNMASK_PASSIVE_FEATURES", "1")
     clip, det = synth_clip(0, "head_turn", False)
     r = analyze_clip(clip, "head_turn", detector=det, with_evidence=False)
     assert r["features"]["p_n_eligible"] < len(clip.frames)     # large yaw frames dropped

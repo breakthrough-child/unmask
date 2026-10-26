@@ -1,6 +1,6 @@
 {
   "version": "v1-20261026",
-  "notes": "Fitted by eval/run_eval.py on 24 clips from 1 participants.",
+  "notes": "NOT DEPLOYED. In-sample fit on all 24 clips of one participant (3 sessions); no out-of-sample validation. The cross-validated result showed no real/swapped separation, so the live demo was reverted to the hand-set v0 priors (docs/REPORT.md 6.1 and 6.5).",
   "signals": {
     "seam": {
       "weight": 1.0,

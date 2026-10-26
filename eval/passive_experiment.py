@@ -149,9 +149,16 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", default=str(ROOT / "data"))
     ap.add_argument("--out", default=str(ROOT / "docs" / "results"))
+    ap.add_argument("--variant", choices=("prereg", "a1"), default="prereg",
+                    help="prereg = the pre-registered definitions; a1 = post-hoc neck-patch coverage fix (exploratory)")
     a = ap.parse_args()
+    import os
+    os.environ["UNMASK_PASSIVE_FEATURES"] = "1"
+    if a.variant == "a1":
+        os.environ["UNMASK_PASSIVE_NECK_FIT"] = "1"
+    suffix = "" if a.variant == "prereg" else "_a1"
     data = Path(a.data)
-    work = ROOT / "eval" / "out" / "passive"
+    work = ROOT / "eval" / "out" / ("passive" if a.variant == "prereg" else "passive-a1")
     clips = RE.analyse_all(RE.read_labels(data), work / "cache", work / "evidence")
     assert len(clips) == 24 and all(c["usable"] for c in clips), "expected 24 usable clips"
 
@@ -170,9 +177,11 @@ def main() -> None:
     result = {"per_feature": per_feature, "single_feature_loso": single, "sets": sets, "criterion": crit,
               "coverage_note": "clips with the feature (of 24)"}
     Path(a.out).mkdir(parents=True, exist_ok=True)
-    (Path(a.out) / "passive_experiment.json").write_text(json.dumps(result, indent=2, default=float))
+    (Path(a.out) / f"passive_experiment{suffix}.json").write_text(json.dumps(result, indent=2, default=float))
 
-    L = ["# Passive-detection experiment: results", "",
+    title = ("# Passive-detection experiment: results (pre-registered)" if a.variant == "prereg" else
+             "# Passive-detection experiment: variant A1 (POST-HOC, exploratory; does not count as confirmation)")
+    L = [title, "",
          "Protocol: [docs/PASSIVE_EXPERIMENT.md](../PASSIVE_EXPERIMENT.md) (pre-registered). **One participant, 3 lighting sessions, 24 clips**; "
          "leave-one-session-out; clip-level 95% Wilson intervals are optimistic (clips of a session are correlated).", "",
          "## Clip-level passive detection (leave-one-session-out, flag if score ≥ 0.5)", "",
@@ -208,7 +217,7 @@ def main() -> None:
         p = per_feature[f]
         L.append(f"| `{f}` | {p['median_real']:.3f} | {p['median_swapped']:.3f} | {p['median_d']:+.3f} | "
                  f"{p['consistent_pairs']}/{p['n_pairs']} | {p['sessions_with_majority_sign']}/{p['n_sessions']} |")
-    (Path(a.out) / "passive_experiment.md").write_text("\n".join(L) + "\n")
+    (Path(a.out) / f"passive_experiment{suffix}.md").write_text("\n".join(L) + "\n")
     print("\n".join(L))
 
 
