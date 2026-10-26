@@ -24,6 +24,7 @@ OpenCV output decides the agent's next tool call.
 | Agent workflow | [docs/agent-workflow.md](docs/agent-workflow.md) |
 | Example decision trace | [docs/AGENT_TRACE_EXAMPLE.json](docs/AGENT_TRACE_EXAMPLE.json) |
 | Evaluation results | [docs/results/results.md](docs/results/results.md) (real recordings, leave-one-session-out) |
+| Passive-signal experiment | [docs/PASSIVE_EXPERIMENT.md](docs/PASSIVE_EXPERIMENT.md) (pre-registered) · [results](docs/results/passive_experiment.md) · [post-hoc variant](docs/results/passive_experiment_a1.md) |
 
 ## Results at a glance (honest)
 
@@ -41,7 +42,10 @@ all one participant allows). Full tables, per-session numbers, failure cases and
 higher risk), and 3 sessions per class is far too few to conclude either way. What works end to end: the agentic loop
 (OpenCV measurements change which challenge is asked next; the agent reached the same verdicts with fewer challenges),
 the AWS deployment, observability and the 24 h deletion. The two one-click demo samples (real and swapped daylight
-sessions) both end LOW_RISK (0.32 and 0.44): the live demo does **not** catch the swap. Do not use the verdict as a real fraud check.
+sessions) both end LOW_RISK (0.285 and 0.288) under the deployed hand-set v0 priors: the live demo does **not** catch the swap.
+A follow-up pre-registered experiment with four new families of passive signals (resolution, sensor noise, skin tone, swap dropout; 13 features;
+[docs/PASSIVE_EXPERIMENT.md](docs/PASSIVE_EXPERIMENT.md)) also found **no improvement** (leave-one-session-out balanced accuracy 0.46
+vs 0.50 for the existing signals), so nothing new was deployed. Do not use the verdict as a real fraud check.
 
 ## Verified versions
 

@@ -86,7 +86,14 @@ as a timeline and can be downloaded as JSON.
   than the swapped one. Digging in: absolute-threshold artefact features (seam flicker, landmark jumps, lighting
   correlation) vary more between sessions (lighting, how far the person turns: 80° vs 177°) than between real and
   swapped. A hand over the face just stops the swap being applied, so the "face persists over the hand" tell-tale never
-  appears. The only consistent direction was a smoother swapped face (3 of 3 sessions), too small a sample to claim. The live demo agrees: both recorded daylight samples (real and swapped) end LOW_RISK (0.32 and 0.44).
+  appears. The only consistent direction was a smoother swapped face (3 of 3 sessions), too small a sample to claim. The live demo agrees: both recorded daylight samples (real and swapped) end LOW_RISK (0.285 and 0.288).
+- **A pre-registered attempt to fix it, and why it failed.** We wrote down four new families of passive signals (resolution mismatch,
+  sensor-noise mismatch, skin-tone mismatch, swap dropout) and the success criterion before computing anything, measured them on frontal
+  frames of all 24 clips, and evaluated leave-one-session-out. No improvement (balanced accuracy 0.46 vs 0.50 for the existing signals),
+  so we reverted the live demo to the hand-set priors rather than ship an in-sample fit. A post-hoc fix of our own design flaw (the neck
+  patch fell outside the frame in 18 of 24 clips) showed the resolution hypothesis pointing the right way in 3 of 3 sessions (relative to
+  the same person's neck, the swapped face has less fine detail than the real one), but still at chance for single-clip detection: between-session offsets
+  are larger than the effect.
 - **Evaluating with one person.** Leave-one-participant-out is impossible, so we used leave-one-session-out and say
   clearly that it overstates generalisation. Generating the swaps was its own detour: downloading the swap models over a
   slow connection would have taken ~8–16 h, so we ran the swap job in a temporary, private stack in our own AWS account
@@ -110,6 +117,8 @@ as a timeline and can be downloaded as JSON.
   sessions with 2.67 instead of 3 challenges on average, and OpenCV's measurements did change its first choice (hand
   pass first when the seam was already clear, head turn first when it was not). Neither it nor the challenges improved
   detection, which stayed at 2/3 detection vs 2/3 false positives.
+- Within the same recording a swap is measurably different in consistent directions, so a *reference-based* check (compare against the
+  same person in the same lighting) looks more promising than absolute thresholds, but we only have 3 sessions of one person.
 - A detector built on hand-picked artefact thresholds needs data from many people and conditions. Between-session
   variation swamped the real/swapped effect with only 3 sessions; paired, within-session features and a much larger and
   more varied data set are the obvious next step.

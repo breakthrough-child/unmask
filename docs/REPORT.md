@@ -214,9 +214,9 @@ Per-session outcome (risk score 0–1 in brackets; thresholds from the other two
    | `turn_reproj_err_gain` | PnP reprojection error at high yaw | 1/3 | Inconsistent |
    | `seam_flicker`, `occ_texture_leak`, `occ_persist`, `light_corr`, `light_lr_corr` | seam flicker, face "leaking" over a hand, lighting following the scene | 1–2/3, tiny differences | No separation observed |
 
-   The in-sample fit on all 24 clips (`scoring_v1.json`, the config deployed) reports a head-turn landmark jump d′ of 5.3.
+   The in-sample fit on all 24 clips (`scoring_v1.json`) reports a head-turn landmark jump d′ of 5.3.
    Given the per-session numbers above that is an **overfitting artefact of 3 vs 3 samples**, not evidence; v1 has
-   no out-of-sample validation and should not be trusted on real calls.
+   no out-of-sample validation, so it is **not deployed** (the live demo uses the hand-set v0 priors, see §6.5).
 5. **Why the original hypotheses may have failed here (hypotheses, not findings).** The swap is a 256-px model
    run offline on clean webcam footage, not a real-time swap on compressed call video. When a hand fully covers the
    face the face detector finds no face, so no swap is applied in those frames (the swapped clip differs less from the
@@ -270,16 +270,18 @@ to API Gateway's 30 s limit. The first invocation of a freshly deployed image pr
 limit and timed out; an EventBridge keep-warm ping every 5 minutes and a one-time client retry for safe calls cover normal
 use, but the first request after a deploy can still be slow.
 
-**Agent on Bedrock (live).** In the two smoke sessions Amazon Nova Lite (`eu.amazon.nova-lite-v1:0`) made **6 decisions with
-0 fallbacks** (median **0.72 s**, max 1.14 s per decision; the other 2 steps were guardrail `conclude`s when no challenge was
-left). Nova chose `light_change → hand_pass → head_turn` in both sessions, whereas the rule policy replay opens with
-`head_turn` for daylight sessions; both are valid under the guardrails. Its stated reasons were generic one-liners ("to resolve
+**Agent on Bedrock (live).** Across four smoke sessions Amazon Nova Lite (`eu.amazon.nova-lite-v1:0`) made 12 decisions: 11
+accepted and **1 rejected by the validator** (it asked for `hand_pass`, which was already completed, so the rule policy took
+over and the fallback was logged; the other 4 steps were guardrail `conclude`s when no challenge was left). Latency, first two
+sessions: median **0.72 s**, max 1.14 s per decision. Nova mostly chose `light_change` first, whereas the rule policy replay opens
+with `head_turn` for daylight sessions; both are valid under the guardrails. Its stated reasons were generic one-liners ("to resolve
 the most uncertain signals …") rather than quoting the signal values the prompt asks for. Whether Nova's order changes verdict
 quality was not measured (the offline evaluation used the rule policy).
 
-**Live demo check.** With the deployed thresholds (`scoring_v1`, an in-sample fit) the real daylight sample ends **LOW_RISK
-(risk 0.32)** and the swapped daylight sample **LOW_RISK (0.44)**: the deployed demo does **not** flag the swap, matching the
-missed-swap failure case in §6.2.
+**Live demo check.** With the deployed hand-set v0 priors the real daylight sample ends **LOW_RISK (risk 0.285)** and the
+swapped daylight sample **LOW_RISK (0.288)**: the deployed demo does **not** flag the swap, matching the missed-swap failure case
+in §6.2. (An earlier deployment with the in-sample `scoring_v1` gave 0.32 and 0.44, also LOW_RISK for both; v1 was reverted because
+it has no out-of-sample validation, §6.5.)
 
 ### 6.4 Failure handling, observability and human control
 
@@ -289,6 +291,71 @@ missed-swap failure case in §6.2.
 | Failure handling | Unit tests: unusable clip → `request_better_conditions` with the gate's reason; 2 unusable in a row → INCONCLUSIVE; ≤ 4 challenges; Bedrock timeout / invalid tool / unavailable challenge → rule fallback; guardrail overrides the model on unusable clips; bare model ID rejected → regional inference profile retried and cached (55 tests in `tests/`, incl. mocked Nova responses) |
 | Observability | Each step's inputs, scores, action, reason, policy (bedrock / rule_fallback / guardrail / human), model ID and latency are stored in DynamoDB and downloadable as JSON. CloudWatch EMF metrics: `ClipLatencyMs`, `AnalysisLatencyMs`, `AgentLatencyMs`, `Verdicts`, `InconclusiveRate`, `BedrockFallbacks`, `Errors`, `ClipsAnalysed`; dashboard and error alarm defined in `template.yaml` |
 | Human control | Skip any challenge (`/skip`), stop any time (`/finish`), delete everything now (`DELETE /sessions/{id}`); the agent cannot end calls or contact anyone |
+
+### 6.5 Passive-signal experiment (pre-registered; result: no improvement)
+
+**Question.** §6.1 showed passive detection at chance, with texture smoothness the only consistent direction. Can new passive
+signals, measured on frontal, unoccluded frames of *every* clip (not just `passive.mp4`), do better? The features, protocol and
+success criterion were written and committed **before** any new feature was computed
+([PASSIVE_EXPERIMENT.md](PASSIVE_EXPERIMENT.md), commit `0474841`); results:
+[results/passive_experiment.md](results/passive_experiment.md).
+
+**New signals (OpenCV 5; `unmask/vision/passive.py`).** Resolution mismatch (Laplacian-pyramid fine-band energy and FFT
+high-frequency power of a face patch vs. neck and vs. the hair/ear/background surround, at the same pixel scale); sensor-noise
+mismatch (median-filter residual, 25th-percentile block noise level in face vs. neck vs. background, its variation over time and
+the frame-to-frame residual correlation); skin-tone mismatch (Lab ΔE between central face and neck / forehead edge, plus
+chroma-only); swap dropout (`cv2.kmeans`, k = 2, on per-frame Lab + texture descriptors: cluster separation, minor-cluster size,
+switch rate); plus the existing texture signal. Eligible frames: face confidence ≥ 0.8, |yaw| ≤ 20°, no hand over the face.
+Controls (face-independent background noise/HF) check whether the one extra video encode of the swapped clips is a confound.
+
+**Protocol.** 24 clips (12 real, 12 swapped), one participant, **leave-one-session-out** (thresholds fitted on two sessions, applied
+to the third; same fitting rule as the scorer), clip-level decision (flag if score ≥ 0.5), 95 % Wilson intervals (optimistic: clips of
+one session are correlated). Feature sets: **T** texture only, **B** existing passive signals, **N** new only, **C** = B + N (primary).
+
+| Set (pre-registered run) | Detection (swapped flagged) | False alarms (real flagged) | Balanced accuracy | per session (daylight / dim / room light) |
+|---|---|---|---|---|
+| T: texture only | 8/12 = 67 % [39–86] | 6/12 = 50 % [25–75] | 0.58 | 0.50 / 0.62 / 0.62 |
+| B: existing passive signals | 6/12 = 50 % [25–75] | 6/12 = 50 % [25–75] | 0.50 | 0.50 / 0.50 / 0.50 |
+| N: new signals only | 10/11 = 91 % [62–98] | 10/11 = 91 % [62–98] | 0.50 | 0.38 / 0.62 / 0.50 |
+| **C: B + N (primary)** | 9/12 = 75 % [47–91] | 10/12 = 83 % [55–95] | **0.46** | 0.50 / 0.38 / 0.50 |
+
+**Pre-registered criterion: not met.** It required (1) balanced accuracy ≥ 0.75 (got 0.46), (2) ≥ 2 of 3 held-out sessions at ≥ 0.75
+(got 0 of 3) and (3) a gain of ≥ 0.10 over B (got −0.04). So nothing was wired into the scorer or the agent's uncertainty logic, and
+the live demo was **reverted to the v0 priors**. (Set N flags 10 of 11 scored clips of *both* classes, i.e. it does not discriminate.)
+
+**Per-feature separation** (paired: swapped − real of the same recording; 12 pairs from 3 sessions; "sessions" = how many of the 3 sessions
+have the majority sign):
+
+| Feature | Clips with feature | Pairs with majority sign | Sessions | Single-feature LOSO balanced accuracy |
+|---|---|---|---|---|
+| `tex_lap_ratio` (kept) | 24/24 | 12/12, swapped smoother | 3/3 | 0.58 |
+| `tex_hf_ratio` (existing) | 24/24 | 11/12, swapped lower | 3/3 | 0.50 |
+| `p_res_pyr_surround` (resolution vs. surround) | 22/24 | 7/11, swapped lower | 2/3 | 0.50 |
+| `p_noise_face_vs_bg` (noise vs. background) | 22/24 | 8/11, swapped lower | 2/3 | 0.50 |
+| `p_skin_de_neck` (ΔE face–neck) | 20/24 | 8/10, swapped **smaller** (opposite of the hypothesis) | 3/3 | 0.55 |
+| `p_skin_de_neck_ab` / `p_skin_de_forehead_ab` | 20/24, 22/24 | 5/10, 6/11 | 1/3, 2/3 | 0.50 / 0.50 |
+| `p_drop_sep`, `p_drop_minor_frac`, `p_drop_switch_rate` (dropout) | 14/24 | 4/7, 3/7, 1/7 | 2/3, 1/3, 0/3 | 0.36 / 0.43 / 0.57 |
+| `p_res_*_neck`, `p_noise_face_vs_neck`, `p_noise_t*` | 4–6/24 | not testable | – | – |
+
+**A design flaw this exposed.** The pre-registered neck patch lay outside the frame in 18 of 24 clips (the face fills the picture), so
+every face-vs-neck comparison, the core of the resolution and noise hypotheses, was measured on only 4–6 clips and was effectively
+untested. The face-independent controls show **no** encode confound (background noise Δ +0.004, background high-frequency Δ +0.025 log
+units, real vs swapped), so the relative features are interpretable where they exist.
+
+**Post-hoc variant A1 (exploratory; declared in the pre-registration file before it was run).** Sliding the neck patch up to fit the
+frame (one change; everything else identical) raised neck-feature coverage to 20/24. It was chosen *after* seeing the data, so it can
+never count as confirmation and could not trigger deployment. Result: the hypothesised direction held for resolution mismatch at the
+neck in **3 of 3 sessions** (`p_res_pyr_neck` 9/10 pairs, `p_res_fft_neck` 8/10: relative to the same person's neck, the swapped face carries less fine
+detail than the real face does) and, less clearly, for noise (`p_noise_face_vs_neck` 7/10, 2/3 sessions), **but classification stays at chance**: C 11/12
+detection with 11/12 false alarms (balanced accuracy 0.50, 0/3 sessions ≥ 0.75), single neck features 0.50–0.55 balanced accuracy.
+Full table: [results/passive_experiment_a1.md](results/passive_experiment_a1.md).
+
+**Reading.** Within a recording the swap *is* measurably different in consistent directions (texture 12/12 pairs; resolution at the neck 9/10
+pairs, post-hoc), which means "compare against a reference of the same person in the same lighting" would work. A single-clip detector
+needs absolute thresholds, and the offsets between sessions (lighting, scene, how the person sits) are larger than the real/swapped
+effect, so thresholds learned from two sessions do not transfer to the third. The 12 pairs are not 12 independent trials: they come from 3
+sessions, so "3 of 3 sessions with the same sign" happens by chance 1 time in 4. One participant, three sessions and one swap tool mean
+this neither proves the idea wrong nor right.
 
 ## 7. AWS deployment and reproducibility
 
@@ -311,10 +378,10 @@ file storage, so the app can be reviewed without an AWS account.
 ## 8. Limitations
 
 - **The detector does not work on the data we have (§6.1).** On one participant and one swap pipeline, detection and
-  false-positive rate are both 2/3 sessions, real clips scored *higher* risk than swapped ones in 2 of 3 sessions, and the
-  deployed thresholds (`scoring_v1.json`) are an in-sample fit on 3 vs 3 sessions with no out-of-sample validation. Do
-  not rely on Unmask's verdict for a real call; as shipped it is a demonstration of the agentic architecture, not a
-  validated deepfake detector.
+  false-positive rate are both 2/3 sessions, real clips scored *higher* risk than swapped ones in 2 of 3 sessions, and a
+  follow-up with four new families of passive signals (§6.5) did not improve it. The deployed thresholds are the hand-set v0 priors; the
+  fitted `scoring_v1.json` (in-sample, no out-of-sample validation) is not deployed. Do not rely on Unmask's verdict for a
+  real call; as shipped it is a demonstration of the agentic architecture, not a validated deepfake detector.
 - **Tiny, narrow sample.** 6 sessions of one person (three lighting conditions), one camera, one swap tool at default
   settings, clean webcam footage. No other people, no skin-tone coverage, no through-a-real-call (compressed) clips,
   no real-time swaps. Results will not transfer to other people, cameras, call apps or swap tools.

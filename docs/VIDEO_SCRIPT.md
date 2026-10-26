@@ -30,12 +30,12 @@ recordings; the swap uses an AI-generated face of no real person."]**
    > This is a real recording of me. Unmask records a passive scan, then the agent, Amazon Nova Lite on Bedrock, chooses
    > the next challenge and tells me why. Each clip goes through OpenCV 5 on Lambda: YuNet face detection, head pose
    > with solvePnP, seam and texture measures, optical flow for the hand pass, lighting correlation.
-2. **[Verdict card: LOW RISK 32/100; scroll the timeline "saw → chose → why"; show an evidence frame]**
+2. **[Verdict card: LOW RISK, about 29/100 (risk 0.285); scroll the timeline "saw → chose → why"; show an evidence frame]**
    > It ends at low risk, with evidence frames and its decision trail.
 3. **[Click "Face-swapped caller (recorded, daylight light)"]**
    > Now the same recording with my face replaced by an AI-generated face of no real person.
-4. **[Verdict card: LOW RISK 44/100]**
-   > And here is the honest part: it also says low risk. **Unmask does not catch this swap.** I'll show the numbers in a minute.
+4. **[Verdict card: LOW RISK, also about 29/100 (risk 0.288)]**
+   > And here is the honest part: it also says low risk, almost the same score. **Unmask does not catch this swap.** I'll show the numbers in a minute.
 5. **[Quick cut: "Check a live caller" → "Share the call window" → the large challenge prompt with countdown]**
    > In live mode you share the call window and read the challenges out to the caller. Same pipeline, same verdict logic.
 
@@ -66,7 +66,10 @@ recordings; the swap uses an AI-generated face of no real person."]**
 > *higher* risk than the swapped one. The agent reached the same verdicts as the fixed sequence with fewer challenges,
 > 2.67 instead of 3, so it saves effort but not accuracy. Digging into the features, the only consistent direction was that
 > the swapped face is smoother, in all three sessions, but the differences between lighting sessions are bigger than the
-> difference between real and swapped. Three sessions can't settle it either way.
+> difference between real and swapped. Three sessions can't settle it either way. We then wrote down four new families of passive signals
+> before looking, covering resolution, sensor noise, skin tone and dropout, and tested them leave-one-session-out. They did not help:
+> balanced accuracy 0.46 against 0.50 before, so we did not ship them. One lead: within the same recording, relative to the person's own neck the
+> swapped face carries less fine detail than the real one in all three sessions, so a reference-based check may work, but that is a hypothesis.
 
 ### 4:25 – 4:55 · Limitations, responsible use, what's next
 **[The three failure-case frames from REPORT.md §6.2; RESPONSIBLE_USE bullets]**
