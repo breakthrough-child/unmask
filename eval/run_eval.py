@@ -115,6 +115,9 @@ def main():
     ap.add_argument("--bedrock", action="store_true", help="agent strategy calls Bedrock (falls back to rules)")
     ap.add_argument("--write-config", action="store_true", help="fit on all data and write scoring_vN.json")
     ap.add_argument("--export-trace", action="store_true", help="write docs/AGENT_TRACE_EXAMPLE.json")
+    ap.add_argument("--base-config", default=str(ROOT / "unmask" / "scoring" / "config" / "scoring_v0.json"),
+                    help="prior thresholds the cross-validation folds start from. Fixed to the hand-set v0 priors "
+                         "(NOT scoring_current.json) so that re-running after --write-config reproduces the same numbers")
     ap.add_argument("--public-prefix", default="divine_",
                     help="only sessions whose data/<label>/<folder> starts with this may appear in public outputs "
                          "(failure frames, example trace); other sessions only feed aggregate numbers")
@@ -136,7 +139,7 @@ def main():
     rows = read_labels(data)
     work = ROOT / "eval" / "out" / ("synthetic" if a.synthetic else "real")
     clips = analyse_all(rows, work / "cache", work / "evidence")
-    base = load_config()
+    base = load_config(a.base_config)
     participants = sorted({c["participant"] for c in clips})
     sess = sessions_from(clips)
     public_prefix = None if a.synthetic else a.public_prefix

@@ -1,27 +1,27 @@
 {
   "samples": [
     {
-      "id": "synthetic-real",
-      "title": "Synthetic caller: real",
+      "id": "real-daylight",
+      "title": "Real caller (recorded, daylight light)",
       "clips": {
-        "passive": "samples/synthetic-real_passive.mp4",
-        "head_turn": "samples/synthetic-real_head_turn.mp4",
-        "hand_pass": "samples/synthetic-real_hand_pass.mp4",
-        "light_change": "samples/synthetic-real_light_change.mp4"
+        "passive": "samples/real_passive.mp4",
+        "head_turn": "samples/real_head_turn.mp4",
+        "hand_pass": "samples/real_hand_pass.mp4",
+        "light_change": "samples/real_light_change.mp4"
       },
-      "description": "Procedurally drawn cartoon (no real person). Pipeline demo only."
+      "description": "Recorded with the project owner's consent."
     },
     {
-      "id": "synthetic-swap",
-      "title": "Synthetic caller: swap-like",
+      "id": "swap-daylight",
+      "title": "Face-swapped caller (recorded, daylight light)",
       "clips": {
-        "passive": "samples/synthetic-swap_passive.mp4",
-        "head_turn": "samples/synthetic-swap_head_turn.mp4",
-        "hand_pass": "samples/synthetic-swap_hand_pass.mp4",
-        "light_change": "samples/synthetic-swap_light_change.mp4"
+        "passive": "samples/swap_passive.mp4",
+        "head_turn": "samples/swap_head_turn.mp4",
+        "hand_pass": "samples/swap_hand_pass.mp4",
+        "light_change": "samples/swap_light_change.mp4"
       },
-      "description": "Procedurally drawn cartoon (no real person). Pipeline demo only."
+      "description": "The same recording with the face replaced by an AI-generated face of no real person (FaceFusion)."
     }
   ],
-  "note": "Synthetic cartoons until consented real samples are added."
+  "note": "Recorded sessions of the project owner; the swap uses an AI-generated face of no real person."
 }

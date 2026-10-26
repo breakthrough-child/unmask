@@ -1,0 +1,197 @@
+{
+  "provenance": "recorded clips in data",
+  "n_clips": 24,
+  "n_participants": 1,
+  "n_sessions": 6,
+  "config_base": "v0-prior",
+  "generated_at": "2026-10-26 13:49",
+  "lopo": false,
+  "cv_scheme": "leave-one-session-out",
+  "n_cv_folds": 3,
+  "single_participant": true,
+  "public_prefix": "divine_",
+  "ablation": {
+    "passive_only": {
+      "detection_rate": 66.7,
+      "high_risk_rate": 33.3,
+      "false_positive_rate": 66.7,
+      "inconclusive_rate": 33.3,
+      "missed_as_low_risk": 0.0,
+      "avg_challenges": 0,
+      "n_real": 3,
+      "n_swapped": 3
+    },
+    "fixed_sequence": {
+      "detection_rate": 66.7,
+      "high_risk_rate": 0.0,
+      "false_positive_rate": 66.7,
+      "inconclusive_rate": 0.0,
+      "missed_as_low_risk": 33.3,
+      "avg_challenges": 3,
+      "n_real": 3,
+      "n_swapped": 3
+    },
+    "agent": {
+      "detection_rate": 66.7,
+      "high_risk_rate": 0.0,
+      "false_positive_rate": 66.7,
+      "inconclusive_rate": 0.0,
+      "missed_as_low_risk": 33.3,
+      "avg_challenges": 2.67,
+      "n_real": 3,
+      "n_swapped": 3
+    }
+  },
+  "per_challenge": {
+    "head_turn": {
+      "detection_rate": 100.0,
+      "false_positive_rate": 100.0,
+      "n_real": 3,
+      "n_swapped": 3
+    },
+    "hand_pass": {
+      "detection_rate": 33.3,
+      "false_positive_rate": 66.7,
+      "n_real": 3,
+      "n_swapped": 3
+    },
+    "light_change": {
+      "detection_rate": 66.7,
+      "false_positive_rate": 33.3,
+      "n_real": 3,
+      "n_swapped": 3
+    }
+  },
+  "latency_local_ms": {
+    "passive": {
+      "mean": 4874.4,
+      "p50": 4774.5,
+      "p95": 5308.1,
+      "max": 5459.4,
+      "n": 6
+    },
+    "head_turn": {
+      "mean": 2533.9,
+      "p50": 2526.8,
+      "p95": 2556.4,
+      "max": 2792.5,
+      "n": 6
+    },
+    "hand_pass": {
+      "mean": 5095.6,
+      "p50": 5004.5,
+      "p95": 5518.1,
+      "max": 5908.1,
+      "n": 6
+    },
+    "light_change": {
+      "mean": 3873.6,
+      "p50": 3978.9,
+      "p95": 4242.3,
+      "max": 4326.7,
+      "n": 6
+    }
+  },
+  "latency_lambda": {
+    "api": "flqstgd5x1.execute-api",
+    "measured_at": "2026-10-25 23:04",
+    "clips": [
+      {
+        "challenge": "passive",
+        "roundtrip_ms": 12008.2,
+        "analysis_ms": 8417.9,
+        "frames": 80,
+        "usable": true
+      },
+      {
+        "challenge": "light_change",
+        "roundtrip_ms": 13091.6,
+        "analysis_ms": 1310.0,
+        "frames": 50,
+        "usable": true
+      },
+      {
+        "challenge": "hand_pass",
+        "roundtrip_ms": 6174.9,
+        "analysis_ms": 1926.5,
+        "frames": 50,
+        "usable": true
+      },
+      {
+        "challenge": "head_turn",
+        "roundtrip_ms": 9611.7,
+        "analysis_ms": 503.8,
+        "frames": 50,
+        "usable": true
+      }
+    ],
+    "roundtrip_ms_median": 10810.0,
+    "analysis_ms_median": 1618.2,
+    "note": "roundtrip = client->API Gateway->Lambda (analysis + agent + DynamoDB) -> client; includes cold start on first clip"
+  },
+  "unusable_reasons": {},
+  "agent_orders": {
+    "head_turn > hand_pass > light_change": 4,
+    "hand_pass > head_turn": 2
+  },
+  "agent_policies": {
+    "rule": 18,
+    "guardrail": 4
+  },
+  "failures": [
+    {
+      "participant": "p01",
+      "label": "swapped",
+      "condition": "daylight",
+      "verdict": "LOW_RISK",
+      "risk": 0.435,
+      "reasons": [
+        "The face is noticeably smoother or blurrier than the rest of the picture.",
+        "The face stayed consistent through a full head turn.",
+        "The face's lighting changed together with the rest of the scene."
+      ],
+      "unusable": {},
+      "frames": [
+        "failures/p01_swapped_daylight_passive_0.jpg",
+        "failures/p01_swapped_daylight_head_turn_0.jpg",
+        "failures/p01_swapped_daylight_hand_pass_0.jpg"
+      ]
+    },
+    {
+      "participant": "p01",
+      "label": "real",
+      "condition": "dim",
+      "verdict": "SUSPICIOUS",
+      "risk": 0.526,
+      "reasons": [
+        "When the head turned, the face broke up or jumped instead of turning smoothly.",
+        "The caller was unusually slow to respond to the requests."
+      ],
+      "unusable": {},
+      "frames": [
+        "failures/p01_real_dim_passive_0.jpg",
+        "failures/p01_real_dim_head_turn_0.jpg",
+        "failures/p01_real_dim_hand_pass_0.jpg"
+      ]
+    },
+    {
+      "participant": "p01",
+      "label": "real",
+      "condition": "roomlight",
+      "verdict": "HIGH_RISK",
+      "risk": 0.752,
+      "reasons": [
+        "When the head turned, the face broke up or jumped instead of turning smoothly.",
+        "The face stayed visible or 'leaked' over the hand when the hand passed in front of it.",
+        "A visible seam flickers along the edge of the face, typical of a pasted-on face."
+      ],
+      "unusable": {},
+      "frames": [
+        "failures/p01_real_roomlight_passive_0.jpg",
+        "failures/p01_real_roomlight_head_turn_0.jpg",
+        "failures/p01_real_roomlight_hand_pass_0.jpg"
+      ]
+    }
+  ],
+  "failures_withheld": 0
+}

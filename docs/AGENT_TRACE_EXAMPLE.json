@@ -1,134 +1,139 @@
 {
   "_about": "Real exported decision trace from eval/run_eval.py offline replay. Each step lists what OpenCV measured (event.features), the per-signal scores before/after, the state the agent saw (agent_input), and what it chose and why (decision). Compare signals_after with the next decision to see vision output changing the agent's next action.",
-  "_provenance": "SYNTHETIC fixtures (procedurally drawn cartoons, not real people or real face swaps)",
-  "participant": "synth03",
-  "label": "real",
-  "condition": "synthetic",
-  "session_id": "7bb9af1498444b2bbcf5b853c2977e1a",
+  "_provenance": "recorded clips in data",
+  "participant": "p01",
+  "label": "swapped",
+  "condition": "roomlight",
+  "session_id": "2e4624a78fcd4e7d801b2abd61056b68",
   "status": "concluded",
   "result": {
-    "risk": 0.143,
-    "verdict": "LOW_RISK",
+    "risk": 0.615,
+    "verdict": "SUSPICIOUS",
     "signals": {
       "seam": {
-        "score": 0.074,
-        "uncertainty": 0.184,
-        "coverage": 0.918,
+        "score": 0.605,
+        "uncertainty": 0.789,
+        "coverage": 1.0,
         "features": {
           "seam_edge": {
-            "value": 0.6562,
-            "suspicion": 0.074,
+            "value": 0.7427,
+            "suspicion": 0.513,
             "n": 3
           },
           "seam_flicker": {
-            "value": 0.6734,
-            "suspicion": 0.032,
+            "value": 0.7372,
+            "suspicion": 0.037,
             "n": 3
           },
           "seam_edge_cv": {
-            "value": 0.1397,
-            "suspicion": 0.164,
+            "value": 0.2921,
+            "suspicion": 0.988,
             "n": 3
+          },
+          "turn_seam_gain": {
+            "value": 0.103,
+            "suspicion": 0.756,
+            "n": 1
           }
         }
       },
       "texture": {
-        "score": 0.222,
-        "uncertainty": 0.444,
+        "score": 0.823,
+        "uncertainty": 0.354,
         "coverage": 1.0,
         "features": {
           "tex_lap_ratio": {
-            "value": 1.0148,
-            "suspicion": 0.096,
+            "value": -0.9849,
+            "suspicion": 0.912,
             "n": 3
           },
           "tex_hf_ratio": {
-            "value": -1.5565,
-            "suspicion": 0.348,
+            "value": 0.6465,
+            "suspicion": 0.403,
             "n": 3
           }
         }
       },
       "temporal": {
-        "score": 0.091,
-        "uncertainty": 0.182,
+        "score": 0.563,
+        "uncertainty": 0.874,
         "coverage": 1.0,
         "features": {
           "landmark_jitter": {
-            "value": 0.0364,
-            "suspicion": 0.215,
+            "value": 0.0194,
+            "suspicion": 0.891,
             "n": 3
           },
           "det_score_std": {
-            "value": 0.0796,
-            "suspicion": 0.044,
+            "value": 0.0353,
+            "suspicion": 0.005,
             "n": 3
           },
           "det_flips_per_s": {
-            "value": 3.4565,
-            "suspicion": 0.0,
+            "value": 0.226,
+            "suspicion": 0.872,
             "n": 3
           }
         }
       },
       "pose": {
-        "score": null,
-        "uncertainty": 1.0,
-        "coverage": 0.0,
-        "features": {}
+        "score": 0.944,
+        "uncertainty": 0.113,
+        "coverage": 1.0,
+        "features": {
+          "turn_score_jerk": {
+            "value": 0.0055,
+            "suspicion": 0.944,
+            "n": 1
+          },
+          "turn_reproj_err_gain": {
+            "value": 0.0247,
+            "suspicion": 0.927,
+            "n": 1
+          },
+          "turn_landmark_jump": {
+            "value": 0.1065,
+            "suspicion": 0.948,
+            "n": 1
+          }
+        }
       },
       "occlusion": {
-        "score": 0.136,
-        "uncertainty": 0.273,
+        "score": 0.305,
+        "uncertainty": 0.611,
         "coverage": 1.0,
         "features": {
           "occ_persist": {
-            "value": 0.1111,
-            "suspicion": 0.045,
+            "value": 0.5429,
+            "suspicion": 1.0,
             "n": 1
           },
           "occ_texture_leak": {
-            "value": 0.4786,
-            "suspicion": 0.305,
+            "value": 0.6326,
+            "suspicion": 0.0,
             "n": 1
           },
           "occ_landmark_jump": {
-            "value": 0.0415,
-            "suspicion": 0.426,
+            "value": 0.204,
+            "suspicion": 0.0,
             "n": 1
           }
         }
       },
       "lighting": {
-        "score": 0.155,
-        "uncertainty": 0.31,
-        "coverage": 1.0,
-        "features": {
-          "light_corr": {
-            "value": 0.9896,
-            "suspicion": 0.124,
-            "n": 1
-          },
-          "light_gain_dev": {
-            "value": 0.2827,
-            "suspicion": 0.201,
-            "n": 1
-          },
-          "light_lr_corr": {
-            "value": -0.8728,
-            "suspicion": 0.004,
-            "n": 1
-          }
-        }
+        "score": null,
+        "uncertainty": 1.0,
+        "coverage": 0.0,
+        "features": {}
       },
       "latency": {
-        "score": 0.315,
-        "uncertainty": 0.631,
+        "score": 0.068,
+        "uncertainty": 0.136,
         "coverage": 1.0,
         "features": {
           "response_latency_s": {
-            "value": 1.7,
-            "suspicion": 0.315,
+            "value": 0.25,
+            "suspicion": 0.068,
             "n": 2
           }
         }
@@ -136,65 +141,65 @@
     },
     "challenges_done": [
       "hand_pass",
-      "light_change"
+      "head_turn"
     ],
     "usable_clips": 3,
     "top_reasons": [
-      "The hand correctly hid the face as it passed in front.",
-      "The face blends naturally into the hair, ears and neck.",
-      "The face's lighting changed together with the rest of the scene."
+      "When the head turned, the face broke up or jumped instead of turning smoothly.",
+      "The face is noticeably smoother or blurrier than the rest of the picture.",
+      "A visible seam flickers along the edge of the face, typical of a pasted-on face."
     ],
-    "advice": "No strong signs of a face swap were found. This is not proof of identity: still verify unusual requests, especially for money, through a channel you trust.",
-    "config_version": "lopo-synth03"
+    "advice": "Something looks off. Don't act on any request for money or secrets during this call. Verify through another channel you trust (call back on a known number, ask a question only they would know).",
+    "config_version": "cv-roomlight"
   },
   "trace": [
     {
       "step": 1,
-      "ts": 1792930533.157,
+      "ts": 1793018974.257,
       "event": {
         "type": "clip_analysed",
         "challenge": "passive",
         "usable": true,
         "reason": null,
         "features": {
-          "face_present_frac": 0.65,
-          "det_score_mean": 0.7446,
-          "det_score_std": 0.0827,
-          "det_flips_per_s": 5.0633,
-          "face_width_median": 132.4191,
-          "landmark_jitter": 0.0358,
-          "reproj_err": 0.0599,
-          "seam_edge": 0.6404,
-          "seam_edge_cv": 0.1543,
-          "seam_color_step": 4.2178,
-          "seam_flicker": 0.6925,
-          "tex_lap_ratio": 0.9806,
-          "tex_hf_face": 0.1745,
-          "tex_hf_ratio": -1.5545
+          "face_present_frac": 1.0,
+          "det_score_mean": 0.9406,
+          "det_score_std": 0.0015,
+          "det_flips_per_s": 0.0,
+          "face_width_median": 180.1796,
+          "landmark_jitter": 0.0075,
+          "reproj_err": 0.0456,
+          "seam_edge": 0.5691,
+          "seam_edge_cv": 0.0448,
+          "seam_color_step": 5.2754,
+          "seam_flicker": 0.4542,
+          "tex_lap_ratio": -0.5481,
+          "tex_hf_face": 0.0219,
+          "tex_hf_ratio": 0.673
         },
         "timing_ms": {
-          "decode": 156.9,
-          "detect": 1386.5,
-          "signals": 1130.2,
-          "evidence": 33.7,
-          "total": 2707.3,
-          "frames": 80
+          "decode": 626.4,
+          "detect": 1719.3,
+          "signals": 2178.9,
+          "evidence": 76.0,
+          "total": 4600.6,
+          "frames": 100
         },
         "evidence": []
       },
       "signals_before": null,
       "signals_after": {
         "seam": {
-          "score": 0.111,
-          "uncertainty": 0.254
+          "score": 0.038,
+          "uncertainty": 0.252
         },
         "texture": {
-          "score": 0.223,
-          "uncertainty": 0.445
+          "score": 0.726,
+          "uncertainty": 0.547
         },
         "temporal": {
-          "score": 0.083,
-          "uncertainty": 0.166
+          "score": 0.863,
+          "uncertainty": 0.273
         },
         "pose": {
           "score": null,
@@ -213,22 +218,22 @@
           "uncertainty": 1.0
         }
       },
-      "risk": 0.139,
-      "provisional_verdict": "INCONCLUSIVE",
+      "risk": 0.526,
+      "provisional_verdict": "SUSPICIOUS",
       "confident": false,
       "agent_input": {
         "signals": {
           "seam": {
-            "score": 0.111,
-            "uncertainty": 0.254
+            "score": 0.038,
+            "uncertainty": 0.252
           },
           "texture": {
-            "score": 0.223,
-            "uncertainty": 0.445
+            "score": 0.726,
+            "uncertainty": 0.547
           },
           "temporal": {
-            "score": 0.083,
-            "uncertainty": 0.166
+            "score": 0.863,
+            "uncertainty": 0.273
           },
           "pose": {
             "score": null,
@@ -247,8 +252,8 @@
             "uncertainty": 1.0
           }
         },
-        "risk": 0.139,
-        "provisional_verdict": "INCONCLUSIVE",
+        "risk": 0.526,
+        "provisional_verdict": "SUSPICIOUS",
         "challenges_completed": [],
         "challenge_attempts": 0,
         "max_challenges": 4,
@@ -284,11 +289,11 @@
       "decision": {
         "action": "issue_challenge",
         "challenge": "hand_pass",
-        "reason": "The occlusion signal is unmeasured; a hand pass tests it directly (expected uncertainty resolved 1.66).",
+        "reason": "The occlusion signal is unmeasured; a hand pass tests it directly (expected uncertainty resolved 1.74).",
         "values": {
-          "head_turn": 1.57,
-          "hand_pass": 1.656,
-          "light_change": 1.456
+          "head_turn": 1.643,
+          "hand_pass": 1.738,
+          "light_change": 1.538
         },
         "policy": "rule",
         "latency_ms": 0.1
@@ -296,57 +301,57 @@
     },
     {
       "step": 2,
-      "ts": 1792930533.158,
+      "ts": 1793018974.258,
       "event": {
         "type": "clip_analysed",
         "challenge": "hand_pass",
         "usable": true,
         "reason": null,
         "features": {
-          "face_present_frac": 0.44,
-          "det_score_mean": 0.7148,
-          "det_score_std": 0.0889,
-          "det_flips_per_s": 3.4694,
-          "face_width_median": 132.9033,
-          "landmark_jitter": 0.0379,
-          "reproj_err": 0.0638,
-          "seam_edge": 0.6721,
-          "seam_edge_cv": 0.1115,
-          "seam_color_step": 4.0714,
-          "seam_flicker": 0.6598,
-          "tex_lap_ratio": 1.0231,
-          "tex_hf_face": 0.1673,
-          "tex_hf_ratio": -1.592,
-          "occ_max_frac": 0.7923,
-          "occ_frames": 18,
-          "occ_persist": 0.1111,
-          "occ_score_drop": 0.7145,
-          "occ_texture_leak": 0.4786,
-          "occ_landmark_jump": 0.0415,
-          "response_latency_s": 1.6
+          "face_present_frac": 0.9333,
+          "det_score_mean": 0.8672,
+          "det_score_std": 0.0935,
+          "det_flips_per_s": 0.678,
+          "face_width_median": 163.5035,
+          "landmark_jitter": 0.0303,
+          "reproj_err": 0.0465,
+          "seam_edge": 0.5869,
+          "seam_edge_cv": 0.5328,
+          "seam_color_step": 6.9034,
+          "seam_flicker": 0.851,
+          "tex_lap_ratio": -0.7009,
+          "tex_hf_face": 0.0212,
+          "tex_hf_ratio": 0.8496,
+          "occ_max_frac": 0.9911,
+          "occ_frames": 35,
+          "occ_persist": 0.5429,
+          "occ_score_drop": 0.4392,
+          "occ_texture_leak": 0.6326,
+          "occ_landmark_jump": 0.204,
+          "response_latency_s": 0.1
         },
         "timing_ms": {
-          "decode": 116.1,
-          "detect": 831.6,
-          "signals": 2275.6,
-          "evidence": 35.9,
-          "total": 3259.1,
-          "frames": 50
+          "decode": 521.3,
+          "detect": 1395.2,
+          "signals": 3907.6,
+          "evidence": 84.0,
+          "total": 5908.1,
+          "frames": 60
         },
         "evidence": []
       },
       "signals_before": {
         "seam": {
-          "score": 0.111,
-          "uncertainty": 0.254
+          "score": 0.038,
+          "uncertainty": 0.252
         },
         "texture": {
-          "score": 0.223,
-          "uncertainty": 0.445
+          "score": 0.726,
+          "uncertainty": 0.547
         },
         "temporal": {
-          "score": 0.083,
-          "uncertainty": 0.166
+          "score": 0.863,
+          "uncertainty": 0.273
         },
         "pose": {
           "score": null,
@@ -367,69 +372,69 @@
       },
       "signals_after": {
         "seam": {
-          "score": 0.065,
-          "uncertainty": 0.165
+          "score": 0.245,
+          "uncertainty": 0.587
         },
         "texture": {
-          "score": 0.23,
-          "uncertainty": 0.46
+          "score": 0.745,
+          "uncertainty": 0.511
         },
         "temporal": {
-          "score": 0.093,
-          "uncertainty": 0.186
+          "score": 0.577,
+          "uncertainty": 0.845
         },
         "pose": {
           "score": null,
           "uncertainty": 1.0
         },
         "occlusion": {
-          "score": 0.136,
-          "uncertainty": 0.273
+          "score": 0.305,
+          "uncertainty": 0.611
         },
         "lighting": {
           "score": null,
           "uncertainty": 1.0
         },
         "latency": {
-          "score": 0.359,
-          "uncertainty": 0.717
+          "score": 0.032,
+          "uncertainty": 0.064
         }
       },
-      "risk": 0.141,
+      "risk": 0.42,
       "provisional_verdict": "LOW_RISK",
       "confident": false,
       "agent_input": {
         "signals": {
           "seam": {
-            "score": 0.065,
-            "uncertainty": 0.165
+            "score": 0.245,
+            "uncertainty": 0.587
           },
           "texture": {
-            "score": 0.23,
-            "uncertainty": 0.46
+            "score": 0.745,
+            "uncertainty": 0.511
           },
           "temporal": {
-            "score": 0.093,
-            "uncertainty": 0.186
+            "score": 0.577,
+            "uncertainty": 0.845
           },
           "pose": {
             "score": null,
             "uncertainty": 1.0
           },
           "occlusion": {
-            "score": 0.136,
-            "uncertainty": 0.273
+            "score": 0.305,
+            "uncertainty": 0.611
           },
           "lighting": {
             "score": null,
             "uncertainty": 1.0
           },
           "latency": {
-            "score": 0.359,
-            "uncertainty": 0.717
+            "score": 0.032,
+            "uncertainty": 0.064
           }
         },
-        "risk": 0.141,
+        "risk": 0.42,
         "provisional_verdict": "LOW_RISK",
         "challenges_completed": [
           "hand_pass"
@@ -468,10 +473,10 @@
       "decision": {
         "action": "issue_challenge",
         "challenge": "head_turn",
-        "reason": "The pose signal is unmeasured; a head turn tests it directly (expected uncertainty resolved 1.50).",
+        "reason": "The pose signal is unmeasured; a head turn tests it directly (expected uncertainty resolved 2.38).",
         "values": {
-          "head_turn": 1.495,
-          "light_change": 1.468
+          "head_turn": 2.378,
+          "light_change": 1.509
         },
         "policy": "rule",
         "latency_ms": 0.1
@@ -479,144 +484,145 @@
     },
     {
       "step": 3,
-      "ts": 1792930533.159,
+      "ts": 1793018974.26,
       "event": {
         "type": "clip_analysed",
         "challenge": "head_turn",
-        "usable": false,
-        "reason": "no_face",
+        "usable": true,
+        "reason": null,
         "features": {
-          "face_present_frac": 0.18,
-          "det_score_mean": 0.6916,
-          "det_score_std": 0.0886,
-          "det_flips_per_s": 1.8367,
-          "face_width_median": 133.3548,
-          "landmark_jitter": null,
-          "reproj_err": 0.0549,
-          "seam_edge": 0.6506,
-          "seam_edge_cv": 0.2127,
-          "seam_color_step": 4.5409,
-          "seam_flicker": 0.6209,
-          "tex_lap_ratio": 1.0588,
-          "tex_hf_face": 0.1803,
-          "tex_hf_ratio": -1.5086,
-          "yaw_range": 18.5466,
-          "yaw_max_abs_dev": 15.5456,
-          "turn_score_jerk": 0.3944,
-          "turn_reproj_err": 0.0692,
-          "turn_reproj_err_gain": 0.0165,
-          "turn_seam_gain": 0.2786,
-          "turn_landmark_jump": 0.0124,
-          "response_latency_s": 2.7
+          "face_present_frac": 1.0,
+          "det_score_mean": 0.9201,
+          "det_score_std": 0.011,
+          "det_flips_per_s": 0.0,
+          "face_width_median": 172.9818,
+          "landmark_jitter": 0.0204,
+          "reproj_err": 0.0725,
+          "seam_edge": 1.0722,
+          "seam_edge_cv": 0.2987,
+          "seam_color_step": 10.7734,
+          "seam_flicker": 0.9065,
+          "tex_lap_ratio": -1.7058,
+          "tex_hf_face": 0.0163,
+          "tex_hf_ratio": 0.4168,
+          "yaw_range": 77.3294,
+          "yaw_max_abs_dev": 55.5273,
+          "turn_score_jerk": 0.0055,
+          "turn_reproj_err": 0.0873,
+          "turn_reproj_err_gain": 0.0247,
+          "turn_seam_gain": 0.103,
+          "turn_landmark_jump": 0.1065,
+          "response_latency_s": 0.4
         },
         "timing_ms": {
-          "decode": 98.9,
-          "detect": 1072.5,
-          "signals": 184.8,
-          "evidence": 18.1,
-          "total": 1374.3,
-          "frames": 50
+          "decode": 315.4,
+          "detect": 965.6,
+          "signals": 1203.8,
+          "evidence": 71.6,
+          "total": 2556.4,
+          "frames": 60
         },
         "evidence": []
       },
       "signals_before": {
         "seam": {
-          "score": 0.065,
-          "uncertainty": 0.165
+          "score": 0.245,
+          "uncertainty": 0.587
         },
         "texture": {
-          "score": 0.23,
-          "uncertainty": 0.46
+          "score": 0.745,
+          "uncertainty": 0.511
         },
         "temporal": {
-          "score": 0.093,
-          "uncertainty": 0.186
+          "score": 0.577,
+          "uncertainty": 0.845
         },
         "pose": {
           "score": null,
           "uncertainty": 1.0
         },
         "occlusion": {
-          "score": 0.136,
-          "uncertainty": 0.273
+          "score": 0.305,
+          "uncertainty": 0.611
         },
         "lighting": {
           "score": null,
           "uncertainty": 1.0
         },
         "latency": {
-          "score": 0.359,
-          "uncertainty": 0.717
+          "score": 0.032,
+          "uncertainty": 0.064
         }
       },
       "signals_after": {
         "seam": {
-          "score": 0.065,
-          "uncertainty": 0.165
+          "score": 0.605,
+          "uncertainty": 0.789
         },
         "texture": {
-          "score": 0.23,
-          "uncertainty": 0.46
+          "score": 0.823,
+          "uncertainty": 0.354
         },
         "temporal": {
-          "score": 0.093,
-          "uncertainty": 0.186
+          "score": 0.563,
+          "uncertainty": 0.874
         },
         "pose": {
-          "score": null,
-          "uncertainty": 1.0
+          "score": 0.944,
+          "uncertainty": 0.113
         },
         "occlusion": {
-          "score": 0.136,
-          "uncertainty": 0.273
+          "score": 0.305,
+          "uncertainty": 0.611
         },
         "lighting": {
           "score": null,
           "uncertainty": 1.0
         },
         "latency": {
-          "score": 0.359,
-          "uncertainty": 0.717
+          "score": 0.068,
+          "uncertainty": 0.136
         }
       },
-      "risk": 0.141,
-      "provisional_verdict": "LOW_RISK",
-      "confident": false,
+      "risk": 0.615,
+      "provisional_verdict": "SUSPICIOUS",
+      "confident": true,
       "agent_input": {
         "signals": {
           "seam": {
-            "score": 0.065,
-            "uncertainty": 0.165
+            "score": 0.605,
+            "uncertainty": 0.789
           },
           "texture": {
-            "score": 0.23,
-            "uncertainty": 0.46
+            "score": 0.823,
+            "uncertainty": 0.354
           },
           "temporal": {
-            "score": 0.093,
-            "uncertainty": 0.186
+            "score": 0.563,
+            "uncertainty": 0.874
           },
           "pose": {
-            "score": null,
-            "uncertainty": 1.0
+            "score": 0.944,
+            "uncertainty": 0.113
           },
           "occlusion": {
-            "score": 0.136,
-            "uncertainty": 0.273
+            "score": 0.305,
+            "uncertainty": 0.611
           },
           "lighting": {
             "score": null,
             "uncertainty": 1.0
           },
           "latency": {
-            "score": 0.359,
-            "uncertainty": 0.717
+            "score": 0.068,
+            "uncertainty": 0.136
           }
         },
-        "risk": 0.141,
-        "provisional_verdict": "LOW_RISK",
+        "risk": 0.615,
+        "provisional_verdict": "SUSPICIOUS",
         "challenges_completed": [
-          "hand_pass"
+          "hand_pass",
+          "head_turn"
         ],
         "challenge_attempts": 2,
         "max_challenges": 4,
@@ -627,339 +633,12 @@
         ],
         "last_clip": {
           "challenge": "head_turn",
-          "usable": false,
-          "reason": "no_face",
-          "instruction": "No face was visible in most of the clip. Ask the caller to face the camera, and make sure their video tile is visible in the shared window."
-        },
-        "consecutive_unusable": 1,
-        "total_unusable": 1,
-        "resolves": {
-          "head_turn": [
-            "seam",
-            "pose",
-            "temporal"
-          ],
-          "hand_pass": [
-            "occlusion",
-            "texture"
-          ],
-          "light_change": [
-            "lighting",
-            "texture"
-          ]
-        }
-      },
-      "decision": {
-        "action": "request_better_conditions",
-        "reason_code": "no_face",
-        "challenge": "head_turn",
-        "reason": "The last clip was unusable (no_face); fixing that first.",
-        "forced": "unusable_clip",
-        "policy": "guardrail",
-        "latency_ms": 0.0
-      }
-    },
-    {
-      "step": 4,
-      "ts": 1792930533.159,
-      "event": {
-        "type": "user_skipped",
-        "challenge": "head_turn",
-        "note": "no better recording available offline"
-      },
-      "signals_before": {
-        "seam": {
-          "score": 0.065,
-          "uncertainty": 0.165
-        },
-        "texture": {
-          "score": 0.23,
-          "uncertainty": 0.46
-        },
-        "temporal": {
-          "score": 0.093,
-          "uncertainty": 0.186
-        },
-        "pose": {
-          "score": null,
-          "uncertainty": 1.0
-        },
-        "occlusion": {
-          "score": 0.136,
-          "uncertainty": 0.273
-        },
-        "lighting": {
-          "score": null,
-          "uncertainty": 1.0
-        },
-        "latency": {
-          "score": 0.359,
-          "uncertainty": 0.717
-        }
-      },
-      "signals_after": {
-        "seam": {
-          "score": 0.065,
-          "uncertainty": 0.165
-        },
-        "texture": {
-          "score": 0.23,
-          "uncertainty": 0.46
-        },
-        "temporal": {
-          "score": 0.093,
-          "uncertainty": 0.186
-        },
-        "pose": {
-          "score": null,
-          "uncertainty": 1.0
-        },
-        "occlusion": {
-          "score": 0.136,
-          "uncertainty": 0.273
-        },
-        "lighting": {
-          "score": null,
-          "uncertainty": 1.0
-        },
-        "latency": {
-          "score": 0.359,
-          "uncertainty": 0.717
-        }
-      },
-      "risk": 0.141,
-      "provisional_verdict": "LOW_RISK",
-      "confident": false,
-      "agent_input": {
-        "signals": {
-          "seam": {
-            "score": 0.065,
-            "uncertainty": 0.165
-          },
-          "texture": {
-            "score": 0.23,
-            "uncertainty": 0.46
-          },
-          "temporal": {
-            "score": 0.093,
-            "uncertainty": 0.186
-          },
-          "pose": {
-            "score": null,
-            "uncertainty": 1.0
-          },
-          "occlusion": {
-            "score": 0.136,
-            "uncertainty": 0.273
-          },
-          "lighting": {
-            "score": null,
-            "uncertainty": 1.0
-          },
-          "latency": {
-            "score": 0.359,
-            "uncertainty": 0.717
-          }
-        },
-        "risk": 0.141,
-        "provisional_verdict": "LOW_RISK",
-        "challenges_completed": [
-          "hand_pass"
-        ],
-        "challenge_attempts": 2,
-        "max_challenges": 4,
-        "available_challenges": [
-          "hand_pass",
-          "light_change"
-        ],
-        "last_clip": {
-          "challenge": "hand_pass",
-          "usable": true,
-          "reason": null,
-          "instruction": null
-        },
-        "consecutive_unusable": 1,
-        "total_unusable": 1,
-        "resolves": {
-          "head_turn": [
-            "seam",
-            "pose",
-            "temporal"
-          ],
-          "hand_pass": [
-            "occlusion",
-            "texture"
-          ],
-          "light_change": [
-            "lighting",
-            "texture"
-          ]
-        }
-      },
-      "decision": {
-        "action": "issue_challenge",
-        "challenge": "light_change",
-        "reason": "The lighting signal is unmeasured; a light change tests it directly (expected uncertainty resolved 1.47).",
-        "values": {
-          "light_change": 1.468
-        },
-        "policy": "rule",
-        "latency_ms": 0.1
-      }
-    },
-    {
-      "step": 5,
-      "ts": 1792930533.16,
-      "event": {
-        "type": "clip_analysed",
-        "challenge": "light_change",
-        "usable": true,
-        "reason": null,
-        "features": {
-          "face_present_frac": 0.62,
-          "det_score_mean": 0.7952,
-          "det_score_std": 0.0673,
-          "det_flips_per_s": 1.8367,
-          "face_width_median": 132.0987,
-          "landmark_jitter": 0.0355,
-          "reproj_err": 0.0593,
-          "seam_edge": 0.6561,
-          "seam_edge_cv": 0.1532,
-          "seam_color_step": 4.0198,
-          "seam_flicker": 0.668,
-          "tex_lap_ratio": 1.0408,
-          "tex_hf_face": 0.1746,
-          "tex_hf_ratio": -1.5229,
-          "light_ref_range": 78.3758,
-          "light_corr": 0.9896,
-          "light_gain_dev": 0.2827,
-          "light_lr_corr": -0.8728,
-          "response_latency_s": 1.8
-        },
-        "timing_ms": {
-          "decode": 125.0,
-          "detect": 930.8,
-          "signals": 1597.9,
-          "evidence": 29.8,
-          "total": 2683.5,
-          "frames": 50
-        },
-        "evidence": []
-      },
-      "signals_before": {
-        "seam": {
-          "score": 0.065,
-          "uncertainty": 0.165
-        },
-        "texture": {
-          "score": 0.23,
-          "uncertainty": 0.46
-        },
-        "temporal": {
-          "score": 0.093,
-          "uncertainty": 0.186
-        },
-        "pose": {
-          "score": null,
-          "uncertainty": 1.0
-        },
-        "occlusion": {
-          "score": 0.136,
-          "uncertainty": 0.273
-        },
-        "lighting": {
-          "score": null,
-          "uncertainty": 1.0
-        },
-        "latency": {
-          "score": 0.359,
-          "uncertainty": 0.717
-        }
-      },
-      "signals_after": {
-        "seam": {
-          "score": 0.074,
-          "uncertainty": 0.184
-        },
-        "texture": {
-          "score": 0.222,
-          "uncertainty": 0.444
-        },
-        "temporal": {
-          "score": 0.091,
-          "uncertainty": 0.182
-        },
-        "pose": {
-          "score": null,
-          "uncertainty": 1.0
-        },
-        "occlusion": {
-          "score": 0.136,
-          "uncertainty": 0.273
-        },
-        "lighting": {
-          "score": 0.155,
-          "uncertainty": 0.31
-        },
-        "latency": {
-          "score": 0.315,
-          "uncertainty": 0.631
-        }
-      },
-      "risk": 0.143,
-      "provisional_verdict": "LOW_RISK",
-      "confident": true,
-      "agent_input": {
-        "signals": {
-          "seam": {
-            "score": 0.074,
-            "uncertainty": 0.184
-          },
-          "texture": {
-            "score": 0.222,
-            "uncertainty": 0.444
-          },
-          "temporal": {
-            "score": 0.091,
-            "uncertainty": 0.182
-          },
-          "pose": {
-            "score": null,
-            "uncertainty": 1.0
-          },
-          "occlusion": {
-            "score": 0.136,
-            "uncertainty": 0.273
-          },
-          "lighting": {
-            "score": 0.155,
-            "uncertainty": 0.31
-          },
-          "latency": {
-            "score": 0.315,
-            "uncertainty": 0.631
-          }
-        },
-        "risk": 0.143,
-        "provisional_verdict": "LOW_RISK",
-        "challenges_completed": [
-          "hand_pass",
-          "light_change"
-        ],
-        "challenge_attempts": 3,
-        "max_challenges": 4,
-        "available_challenges": [
-          "hand_pass",
-          "light_change"
-        ],
-        "last_clip": {
-          "challenge": "light_change",
           "usable": true,
           "reason": null,
           "instruction": null
         },
         "consecutive_unusable": 0,
-        "total_unusable": 1,
+        "total_unusable": 0,
         "resolves": {
           "head_turn": [
             "seam",
@@ -978,9 +657,9 @@
       },
       "decision": {
         "action": "conclude",
-        "reason": "No further challenges available.",
-        "forced": "no_challenges_left",
-        "policy": "guardrail",
+        "reason": "Scores are already decisive; no further challenge needed.",
+        "forced": "confident",
+        "policy": "rule",
         "latency_ms": 0.0
       }
     }

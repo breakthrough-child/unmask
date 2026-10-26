@@ -1,12 +1,11 @@
 # Devpost submission text
 
-_Paste each section into the matching Devpost field. Items marked **⏳ PENDING** still need a value
-that doesn't exist yet (deployment, real-data evaluation, video). Fill them from the stack outputs
-and `docs/results/results.md`; don't paste any number that isn't there._
+_Paste each section into the matching Devpost field. Every number here comes from `docs/results/results.md`
+or `docs/results/lambda_latency.json`. The only item still pending is the video URL (you record it)._
 
 **Project name:** Unmask
 
-**Tagline:** An OpenCV 5 agent that catches real-time face swaps on video calls by asking the caller to move.
+**Tagline:** An agentic OpenCV 5 check for face-swapped video callers: it asks the caller to move, measures the response, and gives a cautious, explainable risk verdict. **Honest status: a working end-to-end system whose detector does not yet separate real from swapped callers on our small data set.**
 
 **Links:** Live demo https://d2xv52l4vknsio.cloudfront.net · Repo https://github.com/breakthrough-child/unmask · Video ⏳ PENDING (YouTube URL)
 
@@ -54,7 +53,8 @@ as a timeline and can be downloaded as JSON.
   **lighting** consistency (Lab L on face vs neck/background over time); response latency; and
   quality gates.
 - A **deterministic scorer** maps features to per-signal suspicion scores with thresholds fitted
-  leave-one-participant-out, stored as versioned JSON. The verdict comes only from here.
+  cross-validated (leave-one-session-out, because we have one participant), stored as versioned JSON. The
+  verdict comes only from here.
 - The **agent** gets the scores and uncertainties and makes one Bedrock Converse tool call:
   `issue_challenge`, `request_better_conditions` or `conclude`. Guardrails validate every call;
   a rule-based policy with the same logic takes over on errors, timeouts or invalid output.
@@ -77,36 +77,52 @@ as a timeline and can be downloaded as JSON.
   evidence says" (deterministic scorer), with guardrails and a fallback, solved it.
 - **OpenCV 5's new DNN engine is slower on CPU.** YuNet took 63 ms per 640×480 frame but 17 ms at
   320×240, so we detect on a downscaled copy and scale the landmarks back. With 10 fps sampling and
-  optical flow at 192 px, a 5 s clip analyses in about 2–4 s on a laptop CPU (p50 1.9–3.8 s),
-  far inside API Gateway's 30 s limit. On Lambda (eu-north-1) warm analysis takes 0.5–2.1 s per clip
-  and each Nova Lite decision about 1 s. The first request to a freshly deployed container image
+  optical flow at 192 px, our 6–10 s clips analyse in about 2.5–5 s on a laptop CPU (p50), far inside API
+  Gateway's 30 s limit. LAMBDA_TIMING_PLACEHOLDER The first request to a freshly deployed container image
   timed out while OpenCV loaded, so we added a keep-warm ping and a safe client retry.
-- ⏳ PENDING: what surprised us once real recordings went through the pipeline.
+- **A negative result, and finding out why.** We recorded one participant in three lighting sessions, swapped each
+  clip with an AI-generated face (an open-source swap pipeline at default settings), and evaluated leave-one-session-out.
+  Detection and false-positive rate were both 2 of 3 sessions; in 2 of 3 sessions the *real* clip scored a higher risk
+  than the swapped one. Digging in: absolute-threshold artefact features (seam flicker, landmark jumps, lighting
+  correlation) vary more between sessions (lighting, how far the person turns: 80° vs 177°) than between real and
+  swapped. A hand over the face just stops the swap being applied, so the "face persists over the hand" tell-tale never
+  appears. The only consistent direction was a smoother swapped face (3 of 3 sessions), too small a sample to claim.
+- **Evaluating with one person.** Leave-one-participant-out is impossible, so we used leave-one-session-out and say
+  clearly that it overstates generalisation. Generating the swaps was its own detour: downloading the swap models over a
+  slow connection would have taken ~8–16 h, so we ran the swap job in a temporary, private stack in our own AWS account
+  and deleted every uploaded clip and result from AWS as soon as the results were downloaded.
 
 ## Accomplishments that we're proud of
 
 - An agent loop where OpenCV output demonstrably changes the next tool call, with an exported
   trace that shows it.
-- An honest evaluation: ablation of passive-only vs fixed sequence vs agent-chosen, leave-one-
-  participant-out thresholds, failure cases with frames, and an explicit INCONCLUSIVE outcome.
+- An honest evaluation: ablation of passive-only vs fixed sequence vs agent-chosen on real recorded and swapped
+  clips, cross-validated thresholds, per-session numbers, failure cases with evidence frames, and an explicit
+  statement that the result is negative and the sample tiny.
+- Observability and reproducibility: structured logs, CloudWatch metrics and dashboard, a one-command remote deploy
+  (CodeBuild), and a privacy rule enforced in code (only the owner's own `divine_*` sessions can appear in public outputs).
 - Responsible defaults: 24 h deletion, no face database, no identification, synthetic swap faces
   only, a delete-now button.
 
 ## What we learned
 
-- Challenge-response is what makes a decision possible: in our synthetic pipeline check (cartoon fixtures, not real swaps), passive analysis
-  alone left half the sessions inconclusive, while challenges let the scorer commit, and the agent
-  got there with fewer challenges (2.5 vs 2.9) than a fixed sequence. Which challenge matters most
-  on real swaps: ⏳ PENDING (per-challenge table from real recordings).
-- Quality gates matter as much as detectors: a clip with no visible face has to turn into a
-  specific instruction, not a verdict. Main source of errors on real calls: ⏳ PENDING (real data).
+- On real data the agent saved effort, not accuracy: it reached the same verdict classes as the fixed sequence in all 6
+  sessions with 2.67 instead of 3 challenges on average, and OpenCV's measurements did change its first choice (hand
+  pass first when the seam was already clear, head turn first when it was not). Neither it nor the challenges improved
+  detection, which stayed at 2/3 detection vs 2/3 false positives.
+- A detector built on hand-picked artefact thresholds needs data from many people and conditions. Between-session
+  variation swamped the real/swapped effect with only 3 sessions; paired, within-session features and a much larger and
+  more varied data set are the obvious next step.
+- Quality gates matter as much as detectors, but on this clean data all 24 clips passed them, so the failure handling
+  was exercised by unit tests and live smoke tests, not by bad real clips.
 - Tool use is a great interface for constrained agent decisions: small action space, validated
   arguments, full trace.
 
 ## What's next
 
 - A browser extension that captures the call tile automatically.
-- More participants, devices and call apps; per-condition calibration and published bias metrics.
+- More participants (≥ 6, several skin tones), devices, call apps and compressed through-a-call recordings; several swap
+  tools and strengths; paired within-session features instead of absolute thresholds; published bias metrics.
 - Audio–lip-sync and voice-clone checks as additional challenges.
 - On-device (WebAssembly OpenCV) passive scan for privacy, with the cloud agent only for challenges.
 

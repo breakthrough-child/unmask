@@ -3,12 +3,12 @@
 **OpenCV AI Competition 2026 (powered by AWS) · Agentic Vision track**
 
 > **Status of the numbers in this report.** Every number below was produced by the code in this
-> repository. Results on **real recorded footage are not available yet**: those cells are marked
-> **⏳ PENDING (real data)** and will be filled by `make eval` once the recordings described in
-> [DATA_COLLECTION.md](DATA_COLLECTION.md) exist. The only detection numbers currently available come
-> from **synthetic cartoon fixtures** (§6.2). They prove the pipeline runs end to end and **say
-> nothing about real-world detection performance**. AWS figures (§6.3, §7) were measured on the live
-> deployment in eu-north-1 with `make smoke` on 2026-10-25, using the synthetic sample clips.
+> repository from recorded footage. The headline result is **negative**: on the data collected so far
+> (one participant, three lighting sessions, one swap pipeline) the scoring **does not separate real
+> from swapped callers**: detection and false-positive rate are both 2 of 3 sessions (§6.1). The sample is far too
+> small to say the approach cannot work, and it is too small to say it can. What the system does demonstrably do is run
+> the full agentic loop end to end on AWS (§5, §6.3, §7). AWS latency figures were measured on the live deployment in
+> eu-north-1 with `make smoke`.
 
 ## 1. Problem
 
@@ -130,83 +130,129 @@ enum case) before validation, so a malformed answer becomes a logged fallback, n
 `toolChoice` is `auto`; the prompt asks for exactly one call and the validator enforces it.
 
 **Proof that vision output changes decisions.** [AGENT_TRACE_EXAMPLE.json](AGENT_TRACE_EXAMPLE.json)
-is an exported trace (currently from a **synthetic** session, provenance recorded in the file):
+is an exported trace of a real recorded session (the swapped room-light session; the offline replay uses the
+rule policy, Bedrock was not called):
 
-| Step | What OpenCV reported | Agent decision | Why (from the trace) |
+| Step | What OpenCV reported (scores 0–1, uncertainty) | Agent decision | Why (from the trace) |
 |---|---|---|---|
-| 1 | Passive clip usable, risk 0.139; seam (0.11) and temporal (0.08) already clear, uncertainty 0.25 / 0.17; texture less so (0.22, uncertainty 0.45) | `issue_challenge(hand_pass)` | expected uncertainty resolved: hand pass 1.66 > head turn 1.57 > light change 1.46. The head turn's seam/temporal targets were already settled, so the default first challenge was skipped |
-| 2 | Hand-pass clip usable, risk 0.141 | `issue_challenge(head_turn)` | pose unmeasured (1.50) |
-| 3 | Head-turn clip **unusable: no_face** | `request_better_conditions` (guardrail) | the last clip was unusable |
-| 4 | User skipped the head turn | `issue_challenge(light_change)` | lighting unmeasured (1.47) |
-| 5 | Light-change clip usable, risk 0.143 | `conclude` | no challenges left → LOW_RISK |
+| 1 | Passive clip: seam 0.04 (uncertainty 0.25, clear), texture 0.73 (0.55), temporal 0.86 (0.27); risk 0.53 | `issue_challenge(hand_pass)` | Expected uncertainty resolved: hand pass 1.74 > head turn 1.64 > light change 1.54. Because the seam signal was already settled, the head turn (which mainly resolves seam/pose) was no longer the best first test |
+| 2 | Hand-pass clip: occlusion 0.31 (0.61), risk 0.42 | `issue_challenge(head_turn)` | Pose unmeasured: a head turn now resolves 2.38 of uncertainty, far more than a light change (1.51) |
+| 3 | Head-turn clip: pose 0.94 (uncertainty 0.11), risk 0.62 | `conclude` | Scores decisive enough; the light-change challenge was skipped |
 
-In the synthetic evaluation the agent's first challenge was not always the default: 1 of 12
-sessions started with `hand_pass`, and 3 sessions concluded after one or two challenges because the
-early-stop rule was already satisfied (§6.2). ⏳ PENDING (real data): the same analysis on real recordings.
+The choice depended on what OpenCV measured. In the two room-light sessions the seam and temporal signals were already clear after the
+passive scan (uncertainty 0.25–0.28), so the agent started with `hand_pass`; in the other four sessions the seam was still
+uncertain (0.45–0.99) and it started with `head_turn` (`head_turn > hand_pass > light_change` ×4, `hand_pass > head_turn` ×2). The agent stopped after two
+challenges in those two room-light sessions and used all three in the others. Whether these choices make the
+*verdict* better is a separate question, and §6.1 shows they did not here.
 
 ## 6. Evaluation
 
-Harness: `eval/run_eval.py`. Each clip is analysed once and cached. Thresholds are fitted
-**leave-one-participant-out** (LOPO) with `unmask/scoring/tune.py` (feature centre = midpoint of the
-class medians, scale from the robust spread, weight = clipped d′), so every participant is scored
-with a config that never saw their clips. **With a single participant that is impossible, so the harness
-falls back to leave-one-session-out** (each recording session is scored with thresholds fitted on the
-other sessions); the results file states which scheme was used. Three strategies are replayed offline on the same clips:
-(a) passive only, (b) fixed sequence head turn → hand pass → light change, (c) agent-chosen.
+Harness: `eval/run_eval.py`, run once on the real recordings; raw outputs in [results/](results/results.md).
+Each clip is analysed once and cached. Thresholds are fitted with `unmask/scoring/tune.py` (feature centre = midpoint
+of the class medians, scale from the robust spread, weight = clipped d′) in a cross-validated way so that every
+scored session never contributed to its own thresholds. Leave-one-*participant*-out is the intended scheme, but **with a
+single participant it is impossible, so the harness uses leave-one-*session*-out** (each lighting session is scored with
+thresholds fitted on the other two), and the results file says so. The folds start from the hand-set v0 priors.
+Three strategies are replayed offline on the same clips: (a) passive only, (b) a fixed sequence head turn → hand pass
+→ light change, (c) the agent choosing challenges (rule policy; Bedrock is not involved in the replay).
 
-### 6.1 Real recordings: ⏳ PENDING (real data)
+### 6.1 Real recordings
 
-| Metric | Passive only | Fixed sequence | Agent-chosen |
+**Data.** 24 clips = 1 participant (the project owner, with consent) × 3 lighting sessions (daylight, dim, room light) ×
+4 clips (passive 10 s, head turn, hand pass, light change 6 s each) × {real, swapped}; 640×480, 30 fps laptop webcam,
+2,520 frames per label. The swapped clips are the same recordings with the face replaced by an AI-generated face of no
+real person, using one open-source face-swap pipeline at its default settings (tool name and version kept in private
+notes, per [DATA_COLLECTION.md](DATA_COLLECTION.md)). Not covered: other people, other skin tones, other cameras,
+through-a-real-call (compressed) variants, other swap tools. All 24 clips passed the quality gates.
+
+| Strategy | Detection (swapped flagged SUSPICIOUS/HIGH_RISK) | High-risk on swapped | False positives (real flagged) | Inconclusive | Swaps rated LOW_RISK | Avg challenges |
+|---|---|---|---|---|---|---|
+| (a) Passive only | 2/3 (66.7 %) | 1/3 | 2/3 (66.7 %) | 2/6 sessions | 0/3 | 0 |
+| (b) Fixed sequence | 2/3 (66.7 %) | 0/3 | 2/3 (66.7 %) | 0/6 | 1/3 | 3 |
+| (c) Agent-chosen | 2/3 (66.7 %) | 0/3 | 2/3 (66.7 %) | 0/6 | 1/3 | 2.67 |
+
+| Per-challenge (passive + that one challenge) | Detection | False positives | n real / n swapped |
 |---|---|---|---|
-| Detection rate (swapped flagged SUSPICIOUS/HIGH_RISK) | ⏳ | ⏳ | ⏳ |
-| False-positive rate (real flagged) | ⏳ | ⏳ | ⏳ |
-| Inconclusive rate | ⏳ | ⏳ | ⏳ |
-| Average challenges to verdict | ⏳ | ⏳ | ⏳ |
+| head_turn | 3/3 | 3/3 | 3 / 3 |
+| hand_pass | 1/3 | 2/3 | 3 / 3 |
+| light_change | 2/3 | 1/3 | 3 / 3 |
 
-| Per-challenge (passive + that challenge) | Detection | False positives |
+With 3 sessions per class one session moves a rate by 33 points, and the 95 % Wilson interval for 2 of 3 is roughly
+21–94 %. Read these as "no evidence of separation", not as measured rates.
+
+Per-session outcome (risk score 0–1 in brackets; thresholds from the other two sessions):
+
+| Session | Passive only | Fixed sequence | Agent-chosen (challenges used) |
+|---|---|---|---|
+| real, daylight | SUSPICIOUS (0.59) | LOW_RISK (0.41) | LOW_RISK (0.41), 3 |
+| **swapped**, daylight | HIGH_RISK (0.70) | LOW_RISK (0.44) ← missed | LOW_RISK (0.44) ← missed, 3 |
+| real, dim | INCONCLUSIVE (0.24) | SUSPICIOUS (0.53) ← false alarm | SUSPICIOUS (0.53) ← false alarm, 3 |
+| **swapped**, dim | INCONCLUSIVE (0.23) | SUSPICIOUS (0.46) | SUSPICIOUS (0.46), 3 |
+| real, room light | SUSPICIOUS (0.47) | HIGH_RISK (0.72) ← false alarm | HIGH_RISK (0.75) ← false alarm, 2 |
+| **swapped**, room light | SUSPICIOUS (0.53) | SUSPICIOUS (0.62) | SUSPICIOUS (0.62), 2 |
+
+![ablation](results/ablation.png)
+
+**What the data says, plainly**
+
+1. **No separation.** In two of the three sessions the *real* clips received a higher risk score than the swapped
+   clips (dim 0.53 vs 0.46; room light 0.75 vs 0.62); only in daylight was the swap marginally higher (0.44 vs 0.41).
+   Detection and false-positive rate are equal, which is what a coin flip looks like.
+2. **Challenges did not help accuracy.** Passive-only already flags the same 2 of 3 real and 2 of 3 swapped
+   sessions (with two dim sessions INCONCLUSIVE); the challenges made verdicts more cautious (swaps went from
+   HIGH_RISK to SUSPICIOUS or LOW_RISK) without separating the classes.
+3. **The agent saved effort, not accuracy.** It reached the same verdict class as the fixed sequence in all six
+   sessions using 2.67 instead of 3 challenges on average (it stopped after two in both room-light sessions). That is a
+   real, if modest, benefit for the person doing the check, but it is not a detection improvement.
+4. **Which signals carry anything?** Per-session feature values (real vs swapped; "swapped higher" = number of
+   sessions out of 3 in which the swapped clip scored higher than the real one):
+
+   | Feature | What it measures | Swapped higher in | Comment |
+   |---|---|---|---|
+   | `tex_lap_ratio` (passive) | face sharpness vs. scene | **0/3** (swapped *smoother* every time) | The only feature with a consistent direction (−0.98 vs −0.20, 1.04 vs 1.70, −0.55 vs −0.11). With n=3 the chance of this by luck is 1 in 4 (either direction); and the session-to-session spread is larger than the effect, so a fixed threshold cannot use it |
+   | `turn_landmark_jump` (head turn) | landmark jumps during the turn | 2/3 | Real room-light turn (0.129) > swapped (0.106): session effects (lighting, how far the head turned, 80° vs 177°) dominate |
+   | `turn_reproj_err_gain` | PnP reprojection error at high yaw | 1/3 | Inconsistent |
+   | `seam_flicker`, `occ_texture_leak`, `occ_persist`, `light_corr`, `light_lr_corr` | seam flicker, face "leaking" over a hand, lighting following the scene | 1–2/3, tiny differences | No separation observed |
+
+   The in-sample fit on all 24 clips (`scoring_v1.json`, the config deployed) reports a head-turn landmark jump d′ of 5.3.
+   Given the per-session numbers above that is an **overfitting artefact of 3 vs 3 samples**, not evidence; v1 has
+   no out-of-sample validation and should not be trusted on real calls.
+5. **Why the original hypotheses may have failed here (hypotheses, not findings).** The swap is a 256-px model
+   run offline on clean webcam footage, not a real-time swap on compressed call video. When a hand fully covers the
+   face the face detector finds no face, so no swap is applied in those frames (the swapped clip differs less from the
+   original in those frames, measured), which looks the same as a real face being hidden: the "face persists over the hand" tell-tale
+   never occurred. Seam flicker was not visible at this quality. None of this says how weaker or real-time swaps, or
+   heavily compressed call video, would behave.
+
+### 6.2 Failure cases (agent strategy, all from the owner's own sessions)
+
+| Case | Verdict | Why it failed |
 |---|---|---|
-| head_turn | ⏳ | ⏳ |
-| hand_pass | ⏳ | ⏳ |
-| light_change | ⏳ | ⏳ |
+| Swapped, daylight | **LOW_RISK (0.44), missed swap** | Only the texture-smoothness signal fired; the head turn scored as consistent and lighting as following the scene (top reasons in the results file) |
+| Real, dim | **SUSPICIOUS (0.53), false alarm** | The head-turn signal ("broke up or jumped") and the response-latency signal fired on a real face |
+| Real, room light | **HIGH_RISK (0.75), false alarm** | Head-turn, hand-occlusion ("leaked over the hand") and seam-flicker signals all scored high on a real face |
 
-Participants: ⏳ (target ≥ 6, see DATA_COLLECTION.md) · skin-tone and lighting coverage: ⏳ ·
-through-a-real-call variants: ⏳ · failure cases with frames: ⏳ (will be in `docs/results/results.md`).
+Evidence frames (annotated: face box, landmarks, seam band, motion overlay):
 
-### 6.2 Synthetic pipeline check (not evidence of real-world performance)
+| Missed swap (daylight, head turn) | False alarm (dim, head turn) | False alarm (room light, hand pass) |
+|---|---|---|
+| ![](results/failures/p01_swapped_daylight_head_turn_0.jpg) | ![](results/failures/p01_real_dim_head_turn_0.jpg) | ![](results/failures/p01_real_roomlight_hand_pass_0.jpg) |
 
-48 clips, 6 procedurally drawn cartoon "participants" (no real people), each with a "real" and a
-"swap-like" set of four clips. The swap-like variants were **designed** to contain the artefacts
-the signals look for, so near-perfect separation is expected and meaningless as a detection claim.
-They show the full loop (decode → YuNet → signals → LOPO thresholds → agent → verdict) runs on
-real video files. Source: [results/synthetic/results.md](results/synthetic/results.md).
-
-| Strategy | Detection | High-risk on swaps | False positives | Inconclusive | Avg challenges |
-|---|---|---|---|---|---|
-| (a) Passive only | 100 % | 33.3 % | 0 % | 50 % | 0 |
-| (b) Fixed sequence | 100 % | 83.3 % | 0 % | 0 % | 2.92 |
-| (c) Agent-chosen | 100 % | 83.3 % | 0 % | 0 % | **2.50** |
-
-What this does show: passive analysis alone left half the sessions INCONCLUSIVE (by design, LOW_RISK
-needs at least one challenge), challenges raised the share of swaps rated HIGH_RISK from 33 % to 83 %,
-and the agent reached the same verdicts with fewer challenges than the fixed sequence (2.50 vs 2.92)
-by stopping as soon as the early-stop rule was met. One clip was rejected by the quality gate (`no_face`) and the
-agent recovered by asking for better conditions and moving on.
-
-![synthetic ablation](results/synthetic/ablation.png)
+The false alarms matter as much as the miss: the advice for SUSPICIOUS is deliberately "verify through another
+channel", never "accuse", but a tool that cries wolf on a real caller in warm light is not usable as is.
 
 ### 6.3 Latency
 
-| Clip (frames after 10 fps resampling) | Local p50 | Local p95 | Lambda OpenCV analysis (3 smoke sessions) |
+| Clip (frames after 10 fps resampling) | Local p50 | Local p95 | n |
 |---|---|---|---|
-| passive (8 s, 80 frames) | 3.57 s | 4.46 s | 0.88 s warm; 8.4–8.5 s on the first clip after a cold start |
-| head_turn (5 s) | 1.93 s | 2.09 s | 0.50–0.60 s |
-| hand_pass (5 s) | 3.83 s | 4.21 s | 1.93–2.09 s |
-| light_change (5 s) | 3.02 s | 3.25 s | 0.77–1.42 s |
+| passive (10 s, 100 frames) | 4.77 s | 5.31 s | 6 |
+| head_turn (6 s, 60 frames) | 2.53 s | 2.56 s | 6 |
+| hand_pass (6 s, 60 frames) | 5.00 s | 5.52 s | 6 |
+| light_change (6 s, 60 frames) | 3.98 s | 4.24 s | 6 |
 
-Local = Ubuntu laptop CPU (8 threads), measured by the eval harness on the synthetic clips, while
-another process was also using the CPU. All are well inside API Gateway's 30 s integration limit.
-A MediaRecorder WebM recorded in the browser (5.2 s, 15 fps) decoded and analysed correctly through
-the local API.
+Local = Ubuntu laptop CPU (8 threads), measured by the eval harness on the 12 real + 12 swapped recordings, while other
+processes were also using the CPU. All are well inside API Gateway's 30 s integration limit. A MediaRecorder WebM
+recorded in the browser decoded and analysed correctly through the local API.
 
 **Lambda (eu-north-1, 3008 MB, x86_64).** Warm OpenCV analysis is faster than on the laptop. The
 first clip after a cold start pays ~8.4 s while the container image's OpenCV layers load lazily. The
@@ -227,14 +273,14 @@ the guardrails; whether that order helps on real swaps is ⏳ PENDING (real data
 | Aspect | How it is evaluated |
 |---|---|
 | Task success | Ablation detection / FPR / inconclusive / challenges-to-verdict (§6.1–6.2) |
-| Failure handling | Unit tests: unusable clip → `request_better_conditions` with the gate's reason; 2 unusable in a row → INCONCLUSIVE; ≤ 4 challenges; Bedrock timeout / invalid tool / unavailable challenge → rule fallback; guardrail overrides the model on unusable clips; bare model ID rejected → regional inference profile retried and cached (49 tests in `tests/`, incl. mocked Nova responses) |
+| Failure handling | Unit tests: unusable clip → `request_better_conditions` with the gate's reason; 2 unusable in a row → INCONCLUSIVE; ≤ 4 challenges; Bedrock timeout / invalid tool / unavailable challenge → rule fallback; guardrail overrides the model on unusable clips; bare model ID rejected → regional inference profile retried and cached (55 tests in `tests/`, incl. mocked Nova responses) |
 | Observability | Each step's inputs, scores, action, reason, policy (bedrock / rule_fallback / guardrail / human), model ID and latency are stored in DynamoDB and downloadable as JSON. CloudWatch EMF metrics: `ClipLatencyMs`, `AnalysisLatencyMs`, `AgentLatencyMs`, `Verdicts`, `InconclusiveRate`, `BedrockFallbacks`, `Errors`, `ClipsAnalysed`; dashboard and error alarm defined in `template.yaml` |
 | Human control | Skip any challenge (`/skip`), stop any time (`/finish`), delete everything now (`DELETE /sessions/{id}`); the agent cannot end calls or contact anyone |
 
 ## 7. AWS deployment and reproducibility
 
 ```bash
-make setup && make test                     # pinned deps, YuNet checksum, 49 tests
+make setup && make test                     # pinned deps, YuNet checksum, 55 tests
 make check-bedrock REGION=eu-north-1         # which Bedrock models/profiles the account can call
 sam build && sam deploy --guided             # whole stack
 make deploy-frontend && make smoke           # upload site, end-to-end test, record Lambda latency
@@ -251,25 +297,32 @@ file storage, so the app can be reviewed without an AWS account.
 
 ## 8. Limitations
 
-- **No real-data results yet** (§6.1). The v0 thresholds are hand-set priors; they must be refitted
-  with `eval/run_eval.py --write-config` before the verdicts mean anything on real calls.
-- **Small participant pool** (planned ≥ 6): results will not transfer perfectly to other people,
-  cameras or call apps.
-- **Single participant, leave-one-session-out (current real data).** The recordings so far are of one person
-  in three lighting sessions, and every swap uses the same synthetic source face and swap model. Thresholds are
-  therefore cross-validated leave-one-*session*-out, not leave-one-*participant*-out. That is a weaker check:
-  the sessions share the same face, camera and swap source, so it overstates how well the thresholds will
-  generalise to new people, other cameras or other swap tools. It says nothing about skin-tone coverage.
-- **Compression:** call apps re-encode video heavily, which can hide seam and texture artefacts or
-  create false ones. The through-a-real-call recordings are meant to measure this.
-- **Adversaries adapt:** better swap models, refusing challenges, or occluding deliberately can
-  defeat individual signals. Unmask raises the cost of a fake; it doesn't make one impossible.
-- **Detector bias:** face detection and texture measures vary with skin tone, exposure and camera
-  quality; quality gates push poor conditions towards INCONCLUSIVE, but coverage is limited.
-- **Browser support:** window sharing works in desktop Chrome/Edge (and recent Firefox), not on
-  mobile; upload mode covers those cases.
-- **OpenCV 5 DNN speed:** YuNet runs at reduced resolution for CPU latency, which halves landmark
-  precision on small faces.
+- **The detector does not work on the data we have (§6.1).** On one participant and one swap pipeline, detection and
+  false-positive rate are both 2/3 sessions, real clips scored *higher* risk than swapped ones in 2 of 3 sessions, and the
+  deployed thresholds (`scoring_v1.json`) are an in-sample fit on 3 vs 3 sessions with no out-of-sample validation. Do
+  not rely on Unmask's verdict for a real call; as shipped it is a demonstration of the agentic architecture, not a
+  validated deepfake detector.
+- **Tiny, narrow sample.** 6 sessions of one person (three lighting conditions), one camera, one swap tool at default
+  settings, clean webcam footage. No other people, no skin-tone coverage, no through-a-real-call (compressed) clips,
+  no real-time swaps. Results will not transfer to other people, cameras, call apps or swap tools.
+- **Single participant, leave-one-session-out.** Thresholds were cross-validated leave-one-*session*-out, not
+  leave-one-*participant*-out. That is a weaker check: the sessions share the same face, camera and swap source, so
+  it *overstates* how well thresholds would generalise to new people, and even so it showed no separation.
+- **Replays used the rule policy.** The offline evaluation does not call Bedrock. Nova Lite's decisions were checked only
+  in live smoke sessions (§6.3), not for their effect on verdict quality.
+- **Compression:** call apps re-encode video heavily, which can hide seam and texture artefacts or create false ones.
+  This was not measured.
+- **Adversaries adapt:** better swap models, refusing challenges, or occluding deliberately can defeat individual signals.
+- **Detector bias:** face detection and texture measures vary with skin tone, exposure and camera quality; the quality
+  gates push poor conditions towards INCONCLUSIVE, but coverage is limited (one skin tone).
+- **Browser support:** window sharing works in desktop Chrome/Edge (and recent Firefox), not on mobile; upload mode covers those.
+- **OpenCV 5 DNN speed:** YuNet runs at reduced resolution for CPU latency, which halves landmark precision on small faces.
+
+### What would make it better (not done)
+
+More participants (≥ 6) and sessions so leave-one-participant-out is possible; compressed through-a-call recordings;
+several swap tools and strengths; paired (within-session) features such as face-vs-scene sharpness rather than absolute
+thresholds, since between-session variation was larger than the real/swapped effect.
 
 ## 9. Responsible use
 

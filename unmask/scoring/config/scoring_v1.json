@@ -1,0 +1,379 @@
+{
+  "version": "v1-20261026",
+  "notes": "Fitted by eval/run_eval.py on 24 clips from 1 participants.",
+  "signals": {
+    "seam": {
+      "weight": 1.0,
+      "challenge": null,
+      "explain": {
+        "high": "A visible seam flickers along the edge of the face, typical of a pasted-on face.",
+        "low": "The face blends naturally into the hair, ears and neck."
+      },
+      "features": {
+        "seam_edge": {
+          "center": 0.71085,
+          "scale": 0.06458,
+          "direction": 1,
+          "weight": 0.2
+        },
+        "seam_flicker": {
+          "center": 0.86403,
+          "scale": 0.06033,
+          "direction": 1,
+          "weight": 0.211
+        },
+        "seam_edge_cv": {
+          "center": 0.13445,
+          "scale": 0.04582,
+          "direction": 1,
+          "weight": 0.2
+        },
+        "turn_seam_gain": {
+          "center": 0.1181,
+          "scale": 0.13796,
+          "direction": -1,
+          "weight": 0.2
+        }
+      }
+    },
+    "texture": {
+      "weight": 0.8,
+      "challenge": null,
+      "explain": {
+        "high": "The face is noticeably smoother or blurrier than the rest of the picture.",
+        "low": "The face's detail matches the rest of the picture."
+      },
+      "features": {
+        "tex_lap_ratio": {
+          "center": -0.2158,
+          "scale": 0.40474,
+          "direction": -1,
+          "weight": 0.919
+        },
+        "tex_hf_ratio": {
+          "center": 0.70415,
+          "scale": 0.46035,
+          "direction": -1,
+          "weight": 0.281
+        }
+      }
+    },
+    "temporal": {
+      "weight": 0.7,
+      "challenge": null,
+      "explain": {
+        "high": "Facial landmarks wobble or the face detection flickers between frames.",
+        "low": "The face moves smoothly and is tracked steadily."
+      },
+      "features": {
+        "landmark_jitter": {
+          "center": 0.02687,
+          "scale": 0.00575,
+          "direction": -1,
+          "weight": 0.2
+        },
+        "det_score_std": {
+          "center": 0.0096,
+          "scale": 0.00434,
+          "direction": -1,
+          "weight": 0.38
+        },
+        "det_flips_per_s": {
+          "center": 0.0,
+          "scale": 0.12868,
+          "direction": 1,
+          "weight": 0.2
+        }
+      }
+    },
+    "pose": {
+      "weight": 1.2,
+      "challenge": "head_turn",
+      "explain": {
+        "high": "When the head turned, the face broke up or jumped instead of turning smoothly.",
+        "low": "The face stayed consistent through a full head turn."
+      },
+      "features": {
+        "turn_score_jerk": {
+          "center": 0.00935,
+          "scale": 0.00144,
+          "direction": 1,
+          "weight": 0.868
+        },
+        "turn_reproj_err_gain": {
+          "center": 0.0121,
+          "scale": 0.00525,
+          "direction": 1,
+          "weight": 2.0
+        },
+        "turn_landmark_jump": {
+          "center": 0.0866,
+          "scale": 0.00995,
+          "direction": 1,
+          "weight": 2.0
+        }
+      }
+    },
+    "occlusion": {
+      "weight": 1.3,
+      "challenge": "hand_pass",
+      "explain": {
+        "high": "The face stayed visible or 'leaked' over the hand when the hand passed in front of it.",
+        "low": "The hand correctly hid the face as it passed in front."
+      },
+      "features": {
+        "occ_persist": {
+          "center": 0.65945,
+          "scale": 0.0182,
+          "direction": -1,
+          "weight": 0.398
+        },
+        "occ_texture_leak": {
+          "center": 0.2815,
+          "scale": 0.02475,
+          "direction": 1,
+          "weight": 0.2
+        },
+        "occ_landmark_jump": {
+          "center": 0.16275,
+          "scale": 0.00792,
+          "direction": 1,
+          "weight": 0.246
+        }
+      }
+    },
+    "lighting": {
+      "weight": 1.1,
+      "challenge": "light_change",
+      "explain": {
+        "high": "When the light changed, the face's brightness didn't follow the neck and surroundings.",
+        "low": "The face's lighting changed together with the rest of the scene."
+      },
+      "features": {
+        "light_corr": {
+          "center": 0.7945,
+          "scale": 0.0996,
+          "direction": -1,
+          "weight": 0.2
+        },
+        "light_gain_dev": {
+          "center": 0.38565,
+          "scale": 0.02494,
+          "direction": 1,
+          "weight": 0.836
+        },
+        "light_lr_corr": {
+          "center": 0.94875,
+          "scale": 0.02559,
+          "direction": -1,
+          "weight": 1.116
+        }
+      }
+    },
+    "latency": {
+      "weight": 0.2,
+      "challenge": null,
+      "explain": {
+        "high": "The caller was unusually slow to respond to the requests.",
+        "low": "The caller responded to requests promptly."
+      },
+      "features": {
+        "response_latency_s": {
+          "center": 0.65,
+          "scale": 0.189,
+          "direction": -1,
+          "weight": 0.265
+        }
+      }
+    }
+  },
+  "verdict": {
+    "high_risk": 0.65,
+    "suspicious": 0.45,
+    "single_signal_suspicious": 0.9,
+    "min_challenges_for_low": 1
+  },
+  "stop": {
+    "high_confidence": 0.7,
+    "single_signal_confident": 0.92,
+    "min_challenges_high": 1,
+    "low_confidence": 0.3,
+    "max_challenge_score_low": 0.35,
+    "min_challenges_low": 2,
+    "max_uncertainty_low": 0.6
+  },
+  "policy": {
+    "max_challenges": 4,
+    "max_consecutive_unusable": 2,
+    "max_total_unusable": 3,
+    "resolves": {
+      "head_turn": [
+        "seam",
+        "pose",
+        "temporal"
+      ],
+      "hand_pass": [
+        "occlusion",
+        "texture"
+      ],
+      "light_change": [
+        "lighting",
+        "texture"
+      ]
+    }
+  },
+  "fit_report": {
+    "seam_edge": {
+      "status": "fitted",
+      "median_real": 0.6982,
+      "median_swapped": 0.7235,
+      "dprime": 0.196,
+      "n_real": 12,
+      "n_swapped": 12
+    },
+    "seam_flicker": {
+      "status": "fitted",
+      "median_real": 0.8513,
+      "median_swapped": 0.8768,
+      "dprime": 0.211,
+      "n_real": 12,
+      "n_swapped": 12
+    },
+    "seam_edge_cv": {
+      "status": "fitted",
+      "median_real": 0.1342,
+      "median_swapped": 0.1346,
+      "dprime": 0.004,
+      "n_real": 12,
+      "n_swapped": 12
+    },
+    "turn_seam_gain": {
+      "status": "fitted",
+      "median_real": 0.1332,
+      "median_swapped": 0.103,
+      "dprime": 0.109,
+      "n_real": 3,
+      "n_swapped": 3
+    },
+    "tex_lap_ratio": {
+      "status": "fitted",
+      "median_real": 0.1561,
+      "median_swapped": -0.5877,
+      "dprime": 0.919,
+      "n_real": 12,
+      "n_swapped": 12
+    },
+    "tex_hf_ratio": {
+      "status": "fitted",
+      "median_real": 0.8335,
+      "median_swapped": 0.5749,
+      "dprime": 0.281,
+      "n_real": 12,
+      "n_swapped": 12
+    },
+    "landmark_jitter": {
+      "status": "fitted",
+      "median_real": 0.0273,
+      "median_swapped": 0.0264,
+      "dprime": 0.083,
+      "n_real": 12,
+      "n_swapped": 12
+    },
+    "det_score_std": {
+      "status": "fitted",
+      "median_real": 0.0112,
+      "median_swapped": 0.008,
+      "dprime": 0.38,
+      "n_real": 12,
+      "n_swapped": 12
+    },
+    "det_flips_per_s": {
+      "status": "fitted",
+      "median_real": 0.0,
+      "median_swapped": 0.0,
+      "dprime": 0.0,
+      "n_real": 12,
+      "n_swapped": 12
+    },
+    "turn_score_jerk": {
+      "status": "fitted",
+      "median_real": 0.0081,
+      "median_swapped": 0.0106,
+      "dprime": 0.868,
+      "n_real": 3,
+      "n_swapped": 3
+    },
+    "turn_reproj_err_gain": {
+      "status": "fitted",
+      "median_real": 0.0016,
+      "median_swapped": 0.0226,
+      "dprime": 2.892,
+      "n_real": 3,
+      "n_swapped": 3
+    },
+    "turn_landmark_jump": {
+      "status": "fitted",
+      "median_real": 0.0667,
+      "median_swapped": 0.1065,
+      "dprime": 5.285,
+      "n_real": 3,
+      "n_swapped": 3
+    },
+    "occ_persist": {
+      "status": "fitted",
+      "median_real": 0.6667,
+      "median_swapped": 0.6522,
+      "dprime": 0.398,
+      "n_real": 3,
+      "n_swapped": 3
+    },
+    "occ_texture_leak": {
+      "status": "fitted",
+      "median_real": 0.2777,
+      "median_swapped": 0.2853,
+      "dprime": 0.154,
+      "n_real": 3,
+      "n_swapped": 3
+    },
+    "occ_landmark_jump": {
+      "status": "fitted",
+      "median_real": 0.1608,
+      "median_swapped": 0.1647,
+      "dprime": 0.246,
+      "n_real": 3,
+      "n_swapped": 3
+    },
+    "light_corr": {
+      "status": "fitted",
+      "median_real": 0.7955,
+      "median_swapped": 0.7935,
+      "dprime": 0.01,
+      "n_real": 3,
+      "n_swapped": 3
+    },
+    "light_gain_dev": {
+      "status": "fitted",
+      "median_real": 0.3648,
+      "median_swapped": 0.4065,
+      "dprime": 0.836,
+      "n_real": 3,
+      "n_swapped": 3
+    },
+    "light_lr_corr": {
+      "status": "fitted",
+      "median_real": 0.9773,
+      "median_swapped": 0.9202,
+      "dprime": 1.116,
+      "n_real": 3,
+      "n_swapped": 2
+    },
+    "response_latency_s": {
+      "status": "fitted",
+      "median_real": 0.7,
+      "median_swapped": 0.6,
+      "dprime": 0.265,
+      "n_real": 9,
+      "n_swapped": 9
+    }
+  }
+}

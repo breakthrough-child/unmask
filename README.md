@@ -23,7 +23,24 @@ OpenCV output decides the agent's next tool call.
 | Architecture | [docs/architecture.md](docs/architecture.md) |
 | Agent workflow | [docs/agent-workflow.md](docs/agent-workflow.md) |
 | Example decision trace | [docs/AGENT_TRACE_EXAMPLE.json](docs/AGENT_TRACE_EXAMPLE.json) |
-| Evaluation results | real recordings: `docs/results/results.md` (⏳ pending data) · pipeline check: [docs/results/synthetic/results.md](docs/results/synthetic/results.md) |
+| Evaluation results | [docs/results/results.md](docs/results/results.md) (real recordings, leave-one-session-out) |
+
+## Results at a glance (honest)
+
+Evaluated on real recordings: **1 participant × 3 lighting sessions × 4 clips**, each also face-swapped with an
+AI-generated face of no real person (24 clips, 2,520 frames per label; leave-one-session-out, the weaker check that is
+all one participant allows). Full tables, per-session numbers, failure cases and caveats: [docs/REPORT.md](docs/REPORT.md) §6.
+
+| Strategy | Swaps flagged | Real flagged (false alarms) | Avg challenges |
+|---|---|---|---|
+| Passive only | 2/3 | 2/3 | 0 |
+| Fixed challenge sequence | 2/3 | 2/3 | 3 |
+| Agent-chosen sequence | 2/3 | 2/3 | 2.67 |
+
+**The detector does not separate real from swapped callers on this data** (in 2 of 3 sessions the real clip scored the
+higher risk), and 3 sessions per class is far too few to conclude either way. What works end to end: the agentic loop
+(OpenCV measurements change which challenge is asked next; the agent reached the same verdicts with fewer challenges),
+the AWS deployment, observability and the 24 h deletion. Do not use the verdict as a real fraud check.
 
 ## Verified versions
 
@@ -95,7 +112,7 @@ increments the `BedrockFallbacks` metric. Set `UseBedrock=false` to run rules on
 ## Evaluate
 
 ```bash
-make eval-synth     # pipeline check on generated fixtures -> docs/results/synthetic/
+make eval-synth     # pipeline check on cartoon fixtures -> eval/out/synthetic-results/ (never published)
 make eval           # your recordings in data/ (see docs/DATA_COLLECTION.md) -> docs/results/
 .venv/bin/python eval/run_eval.py --data data --write-config --export-trace   # refit thresholds
 ```
@@ -127,7 +144,7 @@ sessions feed aggregate numbers but never appear in public outputs.
 unmask/vision/     OpenCV 5 signals, quality gates, evidence frames (no AWS deps)
 unmask/scoring/    deterministic scorer, versioned configs, threshold fitting
 unmask/agent/      rule policy + guardrails, Bedrock Converse tool use, session/trace engine
-unmask/synth.py    synthetic fixtures (cartoons) for tests before real data exists
+unmask/synth.py    cartoon fixtures used only by the unit tests and `make eval-synth`
 backend/           Lambda handler, storage backends, local dev server, observability
 frontend/          static web app (live window-share mode + upload mode)
 eval/              evaluation harness
@@ -138,8 +155,9 @@ template.yaml      AWS SAM template      Dockerfile   Lambda container image
 
 ## Limitations
 
-- Thresholds are tuned on a small set of consenting participants; performance on other people,
-  cameras and call apps will differ. See [docs/REPORT.md](docs/REPORT.md) for measured numbers and failure cases.
+- **Not a validated detector.** Thresholds were fitted on one participant (three sessions) and showed no real/swapped
+  separation out of sample; performance on other people, cameras, call apps and swap tools is unknown. See
+  [docs/REPORT.md](docs/REPORT.md) §6 and §8 for the numbers, failure cases and what would fix it.
 - Heavy call compression, low light, small video tiles and uncooperative callers reduce what can be
   measured; Unmask then says INCONCLUSIVE rather than guessing.
 - Window sharing (`getDisplayMedia`) works in desktop Chrome and Edge (and recent Firefox); not on

@@ -1,90 +1,72 @@
 """Build frontend/samples/ (the judges' one-click demo sets) and manifest.json.
 
-  python scripts/make_samples.py                         # synthetic samples (placeholder)
-  python scripts/make_samples.py --from data/real/p01 --title "Real caller (p01)" \
-                                 --from data/swapped/p01 --title "Face swap (p01)"
+  python scripts/make_samples.py                        # default: the owner's daylight session, real + swapped
+  python scripts/make_samples.py --session divine_dim
 
-Only use recordings of participants who consented to public use (docs/DATA_COLLECTION.md).
-Clips are re-encoded to <=640 px, <=10 s so the demo stays small.
+Privacy rule: only sessions from `divine_*` folders (the project owner's own consenting footage) may be
+published as samples; anything else is refused. Clips are copied as they are when they are already
+<= 640 px wide and <= 10.5 s (no extra re-encoding generation), otherwise re-encoded to H.264.
 """
 from __future__ import annotations
 
 import argparse
 import json
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
-import cv2
-
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
 OUT = ROOT / "frontend" / "samples"
 CHS = ("passive", "head_turn", "hand_pass", "light_change")
+PUBLIC_PREFIX = "divine_"
 
 
-def reencode(src: Path, dst: Path, max_w=640, max_s=10.0):
-    cap = cv2.VideoCapture(str(src))
-    fps = cap.get(cv2.CAP_PROP_FPS) or 15
-    fps = fps if 1 <= fps <= 60 else 15
-    vw = None
-    n = 0
-    while n < max_s * fps:
-        ok, f = cap.read()
-        if not ok:
-            break
-        h, w = f.shape[:2]
-        if w > max_w:
-            f = cv2.resize(f, (max_w, int(h * max_w / w) // 2 * 2), interpolation=cv2.INTER_AREA)
-        if vw is None:
-            vw = cv2.VideoWriter(str(dst), cv2.VideoWriter_fourcc(*"mp4v"), fps, (f.shape[1], f.shape[0]))
-        vw.write(f)
-        n += 1
-    cap.release()
-    if vw:
-        vw.release()
+def probe(path: Path) -> tuple[int, float]:
+    o = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width:format=duration",
+                        "-of", "json", str(path)], capture_output=True, text=True, check=True).stdout
+    j = json.loads(o)
+    return int(j["streams"][0]["width"]), float(j["format"]["duration"])
 
 
-def main():
+def add(path: Path, dst: Path) -> None:
+    w, dur = probe(path)
+    if w <= 640 and dur <= 10.5 and path.suffix.lower() == ".mp4":
+        shutil.copyfile(path, dst)
+    else:
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(path), "-t", "10", "-vf", "scale='min(640,iw)':-2",
+                        "-c:v", "libx264", "-crf", "23", "-pix_fmt", "yuv420p", "-an", str(dst)], check=True)
+
+
+def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--from", dest="src", action="append", default=[])
-    ap.add_argument("--title", action="append", default=[])
+    ap.add_argument("--session", default="divine_daylight")
     a = ap.parse_args()
+    if not a.session.startswith(PUBLIC_PREFIX):
+        sys.exit(f"refusing: only `{PUBLIC_PREFIX}*` sessions may be published as samples (got {a.session!r})")
+    cond = a.session.split("_", 1)[1]
     if OUT.exists():
         shutil.rmtree(OUT)
     OUT.mkdir(parents=True)
     samples = []
-    if a.src:
-        for i, src in enumerate(a.src):
-            sid = f"sample{i + 1}"
-            title = a.title[i] if i < len(a.title) else sid
-            clips = {}
-            for ch in CHS:
-                for ext in (".webm", ".mp4", ".mov", ".mkv"):
-                    p = Path(src) / f"{ch}{ext}"
-                    if p.exists():
-                        dst = OUT / f"{sid}_{ch}.mp4"
-                        reencode(p, dst)
-                        clips[ch] = f"samples/{dst.name}"
-                        break
-            samples.append({"id": sid, "title": title, "clips": clips,
-                            "description": "Recorded with consent for the Unmask evaluation."})
-    else:
-        from unmask import synth
-        for sid, title, swapped, pid in (("synthetic-real", "Synthetic caller: real", False, 4),
-                                         ("synthetic-swap", "Synthetic caller: swap-like", True, 4)):
-            p = synth.person(pid)
-            clips = {}
-            for ch in CHS:
-                frames, fps, _ = synth.render_clip(p, ch, swapped)
-                dst = OUT / f"{sid}_{ch}.mp4"
-                synth.write_video(str(dst), frames, fps)
-                clips[ch] = f"samples/{dst.name}"
-            samples.append({"id": sid, "title": title, "clips": clips,
-                            "description": "Procedurally drawn cartoon (no real person). Pipeline demo only."})
-    note = None if a.src else "Synthetic cartoons until consented real samples are added."
+    for label, title, sid in (("real", f"Real caller (recorded, {cond} light)", "real"),
+                              ("swapped", f"Face-swapped caller (recorded, {cond} light)", "swap")):
+        src = ROOT / "data" / label / a.session
+        clips = {}
+        for ch in CHS:
+            p = next((q for q in src.glob(f"{ch}.*")), None)
+            if p is None:
+                sys.exit(f"missing {src}/{ch}.*")
+            dst = OUT / f"{sid}_{ch}.mp4"
+            add(p, dst)
+            clips[ch] = f"samples/{dst.name}"
+        desc = ("Recorded with the project owner's consent." if label == "real" else
+                "The same recording with the face replaced by an AI-generated face of no real person.")
+        samples.append({"id": f"{sid}-{cond}", "title": title, "clips": clips, "description": desc})
+    note = "Recorded sessions of the project owner; the swap uses an AI-generated face of no real person."
     (OUT / "manifest.json").write_text(json.dumps({"samples": samples, "note": note}, indent=2))
-    print(f"wrote {len(samples)} sample sets to {OUT}")
+    size = sum(f.stat().st_size for f in OUT.iterdir()) / 1e6
+    print(f"wrote {len(samples)} sample sets ({size:.1f} MB) to {OUT}")
 
 
 if __name__ == "__main__":
