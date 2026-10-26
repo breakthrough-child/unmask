@@ -5,6 +5,7 @@ import time
 
 import cv2
 
+from . import passive as PS
 from . import signals as S
 from .evidence import pick_evidence
 from .face import FaceDetector, track_faces
@@ -13,7 +14,7 @@ from .video import Clip, load_clip
 
 CHALLENGES = ("passive", "head_turn", "hand_pass", "light_change")
 # Bump when signal code changes so cached eval features are recomputed.
-ANALYSIS_VERSION = "2026.10.25-2"
+ANALYSIS_VERSION = "2026.10.26-passive1"
 
 _detector: FaceDetector | None = None
 
@@ -78,6 +79,8 @@ def analyze_clip(source: str | Clip, challenge: str = "passive", with_evidence: 
     if challenge == "light_change":
         light = S.lighting_series(clip.frames, faces)
         feats.update(S.lighting_features(light))
+    # passive signals (docs/PASSIVE_EXPERIMENT.md) on frontal, unoccluded frames of every clip
+    feats.update(PS.passive_features(clip.frames, faces, yaws, clip.times, occ_frac))
     if challenge != "passive":
         feats["response_latency_s"] = S.response_onset(challenge, clip.times, yaws, occ_frac, light)
     t_sig = time.perf_counter()

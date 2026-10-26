@@ -86,4 +86,16 @@ Either way the docs report the result and state that this is one participant, th
 
 ## Amendments
 
-_(none yet; any change after seeing results is listed here with the reason)_
+Implementation fixes made **before** any result was computed (crash/index bugs found by the unit tests, not definition changes):
+`frame_masks` was called with a 3-channel shape; the FFT frequency grid failed for odd patch sizes (now `fftfreq`, same
+definition: normalised radius = frequency / Nyquist); the noise level has a numerical floor of 0.05 (avoids log 0).
+Also: the temporal-correlation feature uses all adjacent eligible frame pairs (not only the stride-2 sample).
+
+**A1 (post-hoc, declared after seeing the pre-registered results).** The pre-registered result is in
+[results/passive_experiment.md](results/passive_experiment.md): passive detection did **not** improve. It also showed that the
+neck patch `N` (centre y + 1.18·h) lies outside the frame in 18 of 24 clips, so all features that compare the face with the neck
+were measured on only 4–6 clips and their hypotheses were barely tested. Variant A1 changes **one thing**: if `N` does not fit,
+it is slid up to the lowest position that fits inside the frame, but not above y0 ≥ y + 0.9·h (otherwise the neck features stay
+missing). Everything else, including the protocol and the success criterion, is identical. A1 is **exploratory**: it was chosen
+after looking at the data, so it can never count as confirmation and **does not trigger deployment**; only the pre-registered
+run decides that. A1 results are reported next to the pre-registered ones and labelled as post-hoc.
