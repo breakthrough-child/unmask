@@ -11,3 +11,4 @@ eval/out/
 fixtures/generated/
 frontend/config.js
 .local-store/
+video/

@@ -20,7 +20,7 @@
         "hand_pass": "samples/swap_hand_pass.mp4",
         "light_change": "samples/swap_light_change.mp4"
       },
-      "description": "The same recording with the face replaced by an AI-generated face of no real person (FaceFusion)."
+      "description": "The same recording with the face replaced by an AI-generated face of no real person."
     }
   ],
   "note": "Recorded sessions of the project owner; the swap uses an AI-generated face of no real person."
