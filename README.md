@@ -103,7 +103,9 @@ make eval           # your recordings in data/ (see docs/DATA_COLLECTION.md) -> 
 The harness reports per-challenge detection and false-positive rates, inconclusive rate, average
 challenges to verdict, per-clip latency, and an ablation of passive-only vs fixed sequence vs
 agent-chosen sequence (offline replay of the same clips), with leave-one-participant-out
-thresholds. Failure cases are collected with their evidence frames.
+thresholds (leave-one-session-out when there is only one participant, which is a weaker check; the results
+say so). Failure cases are collected with their evidence frames, for `divine_*` sessions only: other people's
+sessions feed aggregate numbers but never appear in public outputs.
 
 ## API
 

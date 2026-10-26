@@ -149,7 +149,9 @@ early-stop rule was already satisfied (§6.2). ⏳ PENDING (real data): the same
 Harness: `eval/run_eval.py`. Each clip is analysed once and cached. Thresholds are fitted
 **leave-one-participant-out** (LOPO) with `unmask/scoring/tune.py` (feature centre = midpoint of the
 class medians, scale from the robust spread, weight = clipped d′), so every participant is scored
-with a config that never saw their clips. Three strategies are replayed offline on the same clips:
+with a config that never saw their clips. **With a single participant that is impossible, so the harness
+falls back to leave-one-session-out** (each recording session is scored with thresholds fitted on the
+other sessions); the results file states which scheme was used. Three strategies are replayed offline on the same clips:
 (a) passive only, (b) fixed sequence head turn → hand pass → light change, (c) agent-chosen.
 
 ### 6.1 Real recordings: ⏳ PENDING (real data)
@@ -253,6 +255,11 @@ file storage, so the app can be reviewed without an AWS account.
   with `eval/run_eval.py --write-config` before the verdicts mean anything on real calls.
 - **Small participant pool** (planned ≥ 6): results will not transfer perfectly to other people,
   cameras or call apps.
+- **Single participant, leave-one-session-out (current real data).** The recordings so far are of one person
+  in three lighting sessions, and every swap uses the same synthetic source face and swap model. Thresholds are
+  therefore cross-validated leave-one-*session*-out, not leave-one-*participant*-out. That is a weaker check:
+  the sessions share the same face, camera and swap source, so it overstates how well the thresholds will
+  generalise to new people, other cameras or other swap tools. It says nothing about skin-tone coverage.
 - **Compression:** call apps re-encode video heavily, which can hide seam and texture artefacts or
   create false ones. The through-a-real-call recordings are meant to measure this.
 - **Adversaries adapt:** better swap models, refusing challenges, or occluding deliberately can

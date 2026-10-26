@@ -37,6 +37,11 @@ tool. These are the design choices we made, and the limits users should know abo
 
 ## Evaluation data
 
+- **Public vs aggregate-only.** Only recordings from the project owner's own `divine_*` session folders may
+  appear anywhere public (demo sample clips, evidence frames, the example trace, anything in `docs/`).
+  Other people's sessions, if any are added, contribute to aggregate numbers only. `eval/run_eval.py`
+  enforces this (`--public-prefix`, default `divine_`): their failure frames and traces are withheld.
+
 - Only consenting participants (see `docs/DATA_COLLECTION.md`), pseudonymised as p01, p02, …
 - Swapped clips use an **AI-generated face of no real person**, never a celebrity or acquaintance.
 - No face-swap software, model weights, configs or source faces are in this repository.
@@ -44,7 +49,8 @@ tool. These are the design choices we made, and the limits users should know abo
 ## Known limitations and bias
 
 - **Small participant pool.** Thresholds are tuned on a handful of participants with
-  leave-one-participant-out validation; results will not transfer perfectly to other people,
+  leave-one-participant-out validation (leave-one-session-out while there is only one participant, which is
+  weaker, see docs/REPORT.md §8); results will not transfer perfectly to other people,
   cameras, or call apps. See the numbers and failure cases in `docs/REPORT.md`.
 - **Skin tone and lighting coverage.** Face detection confidence, seam contrast and texture
   measures all depend on skin tone, exposure and camera quality. Darker skin in dim light is a

@@ -115,6 +115,9 @@ def main():
     ap.add_argument("--bedrock", action="store_true", help="agent strategy calls Bedrock (falls back to rules)")
     ap.add_argument("--write-config", action="store_true", help="fit on all data and write scoring_vN.json")
     ap.add_argument("--export-trace", action="store_true", help="write docs/AGENT_TRACE_EXAMPLE.json")
+    ap.add_argument("--public-prefix", default="divine_",
+                    help="only sessions whose data/<label>/<folder> starts with this may appear in public outputs "
+                         "(failure frames, example trace); other sessions only feed aggregate numbers")
     a = ap.parse_args()
 
     out = Path(a.out)
@@ -136,29 +139,39 @@ def main():
     base = load_config()
     participants = sorted({c["participant"] for c in clips})
     sess = sessions_from(clips)
+    public_prefix = None if a.synthetic else a.public_prefix
 
-    # ---------------------------------------------------- LOPO replay
+    # ---------------------------------------------------- cross-validated replay
+    # Leave-one-participant-out when there are several participants. With a single participant
+    # that is impossible, so fall back to leave-one-session-out (weaker: see the limitation note).
+    by_participant = len(participants) > 1
+    unit_of_clip = (lambda c: c["participant"]) if by_participant else (lambda c: c["condition"])
+    unit_of_key = (lambda k: k[0]) if by_participant else (lambda k: k[2])
+    units = sorted({unit_of_clip(c) for c in clips})
+    cv_scheme = "leave-one-participant-out" if by_participant else "leave-one-session-out"
     results = []
     fold_cfgs = {}
-    for p in participants:
-        train = [c for c in clips if c["participant"] != p]
-        cfg = fit_config(train, base, version=f"lopo-{p}") if len(participants) > 1 else base
-        fold_cfgs[p] = cfg
+    for u in units:
+        train = [c for c in clips if unit_of_clip(c) != u]
+        cfg = fit_config(train, base, version=f"cv-{u}") if len(units) > 1 else base
+        fold_cfgs[u] = cfg
         for key, by_ch in sess.items():
-            if key[0] != p:
+            if unit_of_key(key) != u:
                 continue
             strat = run_strategies(by_ch, cfg, a.bedrock)
             per_ch = {}
             for ch in CHALLENGES:
                 if ch in by_ch and "passive" in by_ch:
                     per_ch[ch] = session_risk([by_ch["passive"], by_ch[ch]], cfg)
-            results.append({"participant": p, "label": key[1], "condition": key[2], "strategies": strat,
-                            "per_challenge": per_ch, "clips": by_ch})
+            results.append({"participant": key[0], "label": key[1], "condition": key[2], "strategies": strat,
+                            "per_challenge": per_ch, "clips": by_ch,
+                            "public": session_is_public(by_ch, public_prefix)})
 
     # ---------------------------------------------------- metrics
     metrics = {"provenance": provenance, "n_clips": len(clips), "n_participants": len(participants),
                "n_sessions": len(results), "config_base": base.get("version"), "generated_at": time.strftime("%Y-%m-%d %H:%M"),
-               "lopo": len(participants) > 1}
+               "lopo": by_participant, "cv_scheme": cv_scheme, "n_cv_folds": len(units),
+               "single_participant": not by_participant, "public_prefix": public_prefix}
     abl = {}
     for sname in ("passive_only", "fixed_sequence", "agent"):
         real = [r["strategies"][sname]["result"] for r in results if r["label"] == "real"]
@@ -203,11 +216,15 @@ def main():
         shutil.rmtree(fail_dir)
     fail_dir.mkdir()
     failures = []
+    withheld = 0
     for r in results:
         res = r["strategies"]["agent"]["result"]
         wrong = (r["label"] == "swapped" and res["verdict"] in ("LOW_RISK", "INCONCLUSIVE")) or \
                 (r["label"] == "real" and res["verdict"] in FLAGGED)
         if not wrong:
+            continue
+        if not r["public"]:   # privacy: other people's sessions are aggregate-only
+            withheld += 1
             continue
         frames = []
         for ch, c in r["clips"].items():
@@ -221,6 +238,7 @@ def main():
                          "unusable": {ch: c["reason"] for ch, c in r["clips"].items() if not c["usable"]},
                          "frames": frames[:3]})
     metrics["failures"] = failures
+    metrics["failures_withheld"] = withheld
 
     # ---------------------------------------------------- charts
     charts = make_charts(results, metrics, out)
@@ -240,7 +258,18 @@ def main():
         print("--write-config ignored for synthetic data (never ship thresholds fitted on cartoons)", file=sys.stderr)
 
     if a.export_trace:
-        export_trace(results, ROOT / "docs" / "AGENT_TRACE_EXAMPLE.json", provenance)
+        public = [r for r in results if r["public"]]
+        if public:
+            export_trace(public, ROOT / "docs" / "AGENT_TRACE_EXAMPLE.json", provenance)
+        else:
+            print("no public sessions: example trace not exported", file=sys.stderr)
+
+
+def session_is_public(by_ch: dict, prefix: str | None) -> bool:
+    """A session may appear in public outputs only if every clip comes from data/<label>/<prefix...>."""
+    if prefix is None:
+        return True
+    return all(len(Path(c["path"]).parts) >= 3 and Path(c["path"]).parts[1].startswith(prefix) for c in by_ch.values())
 
 
 def export_trace(results, path: Path, provenance: str):
@@ -318,7 +347,7 @@ def make_charts(results, metrics, out: Path):
             ax.scatter([i + dx] * len(ys), ys, s=14, color=col, alpha=0.75, label=lab if i == 0 else None)
     ax.axhline(0.5, color="#a0aec0", lw=1, ls=":")
     ax.set_xticks(range(len(sig_names)), sig_names)
-    ax.set_ylabel("signal suspicion (LOPO)")
+    ax.set_ylabel("signal suspicion (cross-validated)")
     ax.set_ylim(-0.05, 1.05)
     ax.spines[["top", "right"]].set_visible(False)
     ax.legend(frameon=False, fontsize=8)
@@ -332,8 +361,13 @@ def make_charts(results, metrics, out: Path):
 def render_md(m, charts):
     L = [f"# Evaluation results", "",
          f"> **Data:** {m['provenance']}  ", f"> {m['n_clips']} clips · {m['n_participants']} participants · "
-         f"{m['n_sessions']} sessions · generated {m['generated_at']} · thresholds "
-         f"{'fitted leave-one-participant-out' if m['lopo'] else 'from ' + str(m['config_base'])}", ""]
+         f"{m['n_sessions']} sessions · generated {m['generated_at']} · thresholds fitted "
+         f"{m['cv_scheme']} ({m['n_cv_folds']} folds)", ""]
+    if m.get("single_participant") and not m["provenance"].startswith("SYNTHETIC"):
+        L += ["> ⚠️ **Limitation: single participant.** Leave-one-participant-out is impossible with one person, so "
+              "thresholds were fitted **leave-one-session-out**. The sessions share the same face, camera and swap source, "
+              "so this check is weaker and overstates how well the thresholds will generalise to new people. "
+              "More participants are needed for a real generalisation estimate.", ""]
     if m["provenance"].startswith("SYNTHETIC"):
         L += ["> ⚠️ These numbers come from synthetic cartoons that were *designed* to contain swap-like artefacts. "
               "They only show that the pipeline runs end to end; they are **not** evidence of real-world detection performance.", ""]
@@ -368,7 +402,10 @@ def render_md(m, charts):
     L += [f"- {k}: {v}" for k, v in m["unusable_reasons"].items()] or ["- none"]
     L += ["", f"## Failure cases ({len(m['failures'])})", ""]
     if not m["failures"]:
-        L.append("None in this run (agent strategy).")
+        L.append("None among public sessions in this run (agent strategy).")
+    if m.get("failures_withheld"):
+        L.append(f"{m['failures_withheld']} further failure(s) on non-public sessions are counted in the aggregate "
+                 "numbers above but not shown (privacy: only sessions from the `" + str(m["public_prefix"]) + "` folders are shown).")
     for f in m["failures"]:
         L.append(f"### {f['participant']} · {f['label']} · {f['condition']} → {f['verdict']} (risk {f['risk']})")
         L += [f"- {t}" for t in f["reasons"]]

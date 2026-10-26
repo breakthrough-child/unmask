@@ -69,6 +69,9 @@ Unmask measures response latency from clip start.
 ### Variety to cover (as much as time allows)
 
 Aim for **at least 6 participants** (more is better; leave-one-participant-out needs ≥ 3 to mean anything).
+With a single participant the harness uses leave-one-session-out instead and flags it as a limitation.
+Name each session folder `<owner>_<condition>` (e.g. `divine_dim`); only folders starting with `divine_`
+may ever appear in public outputs, everyone else's footage is aggregate-only.
 
 - **Skin tones:** deliberately include a range (at least light, medium and dark skin tones).
   Report what you achieved in `docs/REPORT.md` — the bias section depends on it.

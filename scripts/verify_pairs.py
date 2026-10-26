@@ -10,8 +10,11 @@ Per pair checks:
        - the BACKGROUND MAD (outside an enlarged face box), which should stay small, and
        - a re-encode baseline: the original re-encoded through the same H.264 settings,
          which tells us how much difference plain compression noise explains.
-     PASS needs face MAD >= MIN_FACE_MAD, face MAD >= RATIO x background MAD and
-     face MAD >= RATIO x re-encode face MAD, on at least MIN_FRAC of the sampled face frames.
+     A frame "clearly differs" when face MAD >= RATIO x max(background MAD, re-encode face MAD, 1.0)
+     and >= ABS_FLOOR gray levels. The bar is relative to the clip's own noise floor, so it does not
+     depend on how bright the footage is (a fixed absolute MAD wrongly failed darker sessions).
+     A clip PASSES when at least MIN_FRAC of its face frames clearly differ (default: the median frame).
+     The fraction is always reported: frames where a hand hides the face legitimately differ less.
 """
 from __future__ import annotations
 
@@ -29,9 +32,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from unmask.vision.face import FaceDetector  # noqa: E402
 
-MIN_FACE_MAD = 8.0     # gray levels (0-255)
-RATIO = 2.5
-MIN_FRAC = 0.8
+ABS_FLOOR = 3.0        # gray levels (0-255): guards the ratio when the noise floor is ~0
+RATIO = 3.0
+MIN_FRAC = 0.5
 CHALLENGES = ("passive", "head_turn", "hand_pass", "light_change")
 
 
@@ -120,13 +123,17 @@ def verify_pair(real: Path, swapped: Path, det: FaceDetector, every: int) -> dic
         res["problems"].append("no face found in the original: cannot compare face regions")
     else:
         face_d, bg_d, face_re, bg_re = map(np.array, (face_d, bg_d, face_re, bg_re))
-        passes = (face_d >= MIN_FACE_MAD) & (face_d >= RATIO * np.maximum(bg_d, 1.0)) & (face_d >= RATIO * np.maximum(face_re, 1.0))
+        noise = np.maximum(np.maximum(bg_d, face_re), 1.0)
+        passes = (face_d >= ABS_FLOOR) & (face_d >= RATIO * noise)
+        res["median_face_to_noise_ratio"] = round(float(np.median(face_d / noise)), 2)
         res["face_mad_swapped"] = round(float(np.median(face_d)), 2)
         res["background_mad_swapped"] = round(float(np.median(bg_d)), 2)
         res["face_mad_reencode_baseline"] = round(float(np.median(face_re)), 2)
         res["frac_frames_face_clearly_differs"] = round(float(passes.mean()), 3)
         if passes.mean() < MIN_FRAC:
             res["problems"].append(f"face clearly differs on only {passes.mean():.0%} of checked frames (need {MIN_FRAC:.0%})")
+        elif passes.mean() < 0.9:
+            res["note"] = f"face differs on {passes.mean():.0%} of frames (frames with a hand over the face change less)"
     res["ok"] = not res["problems"]
     return res
 
@@ -149,7 +156,7 @@ def main() -> int:
             results.append(verify_pair(real, swapped, det, a.every))
         except Exception as e:  # noqa: BLE001
             results.append({"clip": f"{real.parent.name}/{real.name}", "ok": False, "problems": [f"{type(e).__name__}: {e}"]})
-    print(f"{'clip':<32}{'frames':>14}{'fmt':>16}{'face MAD':>10}{'bg MAD':>8}{'re-enc':>8}{'%differs':>10}  result")
+    print(f"{'clip':<32}{'frames':>14}{'fmt':>16}{'face MAD':>10}{'bg MAD':>8}{'re-enc':>8}{'x noise':>8}{'%differs':>10}  result")
     for r in results:
         if "swapped" not in r:
             print(f"{r['clip']:<32} ERROR {r['problems']}")
@@ -158,7 +165,9 @@ def main() -> int:
               f"{r['swapped']['codec'] + '/' + r['swapped']['pix_fmt']:>16}"
               f"{r.get('face_mad_swapped', float('nan')):>10}{r.get('background_mad_swapped', float('nan')):>8}"
               f"{r.get('face_mad_reencode_baseline', float('nan')):>8}"
-              f"{r.get('frac_frames_face_clearly_differs', float('nan')):>10}  {'PASS' if r['ok'] else 'FAIL ' + '; '.join(r['problems'])}")
+              f"{r.get('median_face_to_noise_ratio', float('nan')):>8}"
+              f"{r.get('frac_frames_face_clearly_differs', float('nan')):>10}  "
+              f"{('PASS' + (' (' + r['note'] + ')' if r.get('note') else '')) if r['ok'] else 'FAIL ' + '; '.join(r['problems'])}")
     for m in missing:
         print(f"MISSING {m}")
     ok = bool(results) and not missing and all(r["ok"] for r in results)
